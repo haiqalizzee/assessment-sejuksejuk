@@ -78,14 +78,14 @@ const generateTechnicianId = async (): Promise<string> => {
   try {
     const firestore = getFirebaseDb()
     const querySnapshot = await getDocs(
-      query(collection(firestore, TECHNICIANS_COLLECTION), orderBy("id", "desc"), limit(1))
+      query(collection(firestore, TECHNICIANS_COLLECTION), orderBy("__name__", "desc"), limit(1))
     )
     
     if (querySnapshot.empty) {
       return "TECH001"
     }
 
-    const lastId = querySnapshot.docs[0].data().id
+    const lastId = querySnapshot.docs[0].id
     const numericPart = parseInt(lastId.replace("TECH", ""))
     const nextNumericPart = numericPart + 1
     return `TECH${nextNumericPart.toString().padStart(3, "0")}`
@@ -308,7 +308,7 @@ export const techniciansService = {
         query(collection(firestore, TECHNICIANS_COLLECTION), orderBy("name")),
         (snapshot) => {
           const technicians = snapshot.docs.map((doc) => ({
-            id: doc.data().id, // Use the custom TECH### ID
+            id: doc.id, // Use the document ID which is our TECH### format
             ...doc.data(),
             joinedDate: convertTimestamp(doc.data().joinedDate),
           })) as Technician[]

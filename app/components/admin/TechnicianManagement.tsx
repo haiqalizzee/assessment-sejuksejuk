@@ -175,7 +175,19 @@ export default function TechnicianManagement() {
           <h2 className="text-2xl font-bold text-blue-900 mb-2">Technician Management</h2>
           <p className="text-blue-600">Manage your technician team</p>
         </div>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <Dialog open={isDialogOpen} onOpenChange={(open) => {
+          setIsDialogOpen(open)
+          if (!open) {
+            // Reset form when dialog closes
+            setEditingTechnician(null)
+            setFormData({
+              name: "",
+              phone: "",
+              email: "",
+              password: "",
+            })
+          }
+        }}>
           <DialogTrigger asChild>
             <Button
               onClick={() => {
@@ -186,6 +198,7 @@ export default function TechnicianManagement() {
                   email: "",
                   password: "",
                 })
+                setIsDialogOpen(true)
               }}
               className="bg-blue-600 hover:bg-blue-700"
             >
