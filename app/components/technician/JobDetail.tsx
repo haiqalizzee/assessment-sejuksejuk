@@ -224,77 +224,77 @@ Please check and leave feedback. Thank you!
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <Button variant="outline" size="sm" onClick={onBack} className="bg-transparent">
-          <ArrowLeft className="w-4 h-4 mr-2" />
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex items-center gap-3 sm:gap-4">
+        <Button variant="outline" size="sm" onClick={onBack} className="bg-transparent text-xs sm:text-sm">
+          <ArrowLeft className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
           Back
         </Button>
         <div>
-          <h2 className="text-2xl font-bold text-blue-900">Complete Job</h2>
-          <p className="text-blue-600">Update job details and mark as complete</p>
+          <h2 className="text-xl sm:text-2xl font-bold text-blue-900">Complete Job</h2>
+          <p className="text-sm sm:text-base text-blue-600">Update job details and mark as complete</p>
         </div>
       </div>
 
       {/* Job Information */}
       <Card className="border-0 shadow-lg bg-blue-50">
-        <CardHeader>
-          <CardTitle className="text-lg text-blue-900 flex items-center gap-2">
-            <FileText className="w-5 h-5" />
+        <CardHeader className="px-4 sm:px-6 py-4 sm:py-6">
+          <CardTitle className="text-base sm:text-lg text-blue-900 flex items-center gap-2">
+            <FileText className="w-4 h-4 sm:w-5 sm:h-5" />
             Job Information
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <CardContent className="space-y-3 sm:space-y-4 px-4 sm:px-6 pb-4 sm:pb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div>
-              <Label className="text-sm font-medium text-blue-700">Order ID</Label>
-              <p className="font-semibold text-blue-900">{job.id}</p>
+              <Label className="text-xs sm:text-sm font-medium text-blue-700">Order ID</Label>
+              <p className="font-semibold text-blue-900 text-sm sm:text-base">{job.id}</p>
             </div>
             <div>
-              <Label className="text-sm font-medium text-blue-700">Service Type</Label>
-              <p className="font-semibold text-blue-900">{job.serviceType}</p>
+              <Label className="text-xs sm:text-sm font-medium text-blue-700">Service Type</Label>
+              <p className="font-semibold text-blue-900 text-sm sm:text-base">{job.serviceType}</p>
             </div>
             <div>
-              <Label className="text-sm font-medium text-blue-700">Customer Name</Label>
-              <p className="font-semibold text-blue-900">{job.customerName}</p>
+              <Label className="text-xs sm:text-sm font-medium text-blue-700">Customer Name</Label>
+              <p className="font-semibold text-blue-900 text-sm sm:text-base">{job.customerName}</p>
             </div>
             <div>
-              <Label className="text-sm font-medium text-blue-700">Phone</Label>
-              <p className="font-semibold text-blue-900">{job.phone}</p>
+              <Label className="text-xs sm:text-sm font-medium text-blue-700">Phone</Label>
+              <p className="font-semibold text-blue-900 text-sm sm:text-base">{job.phone}</p>
             </div>
           </div>
           <div>
-            <Label className="text-sm font-medium text-blue-700">Address</Label>
-            <p className="font-semibold text-blue-900">{job.address}</p>
+            <Label className="text-xs sm:text-sm font-medium text-blue-700">Address</Label>
+            <p className="font-semibold text-blue-900 text-sm sm:text-base">{job.address}</p>
           </div>
           <div>
-            <Label className="text-sm font-medium text-blue-700">Problem Description</Label>
-            <p className="font-semibold text-blue-900">{job.problemDescription}</p>
+            <Label className="text-xs sm:text-sm font-medium text-blue-700">Problem Description</Label>
+            <p className="font-semibold text-blue-900 text-sm sm:text-base">{job.problemDescription}</p>
           </div>
           {job.adminNotes && (
             <div>
-              <Label className="text-sm font-medium text-blue-700">Admin Notes</Label>
-              <p className="font-semibold text-blue-900">{job.adminNotes}</p>
+              <Label className="text-xs sm:text-sm font-medium text-blue-700">Admin Notes</Label>
+              <p className="font-semibold text-blue-900 text-sm sm:text-base">{job.adminNotes}</p>
             </div>
           )}
           {job.uploadedFiles && job.uploadedFiles.length > 0 && (
             <div>
-              <Label className="text-sm font-medium text-blue-700">Uploaded Files</Label>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-2">
+              <Label className="text-xs sm:text-sm font-medium text-blue-700">Uploaded Files</Label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 mt-2">
                 {job.uploadedFiles.map((file, index) => (
                   <div key={index} className="flex items-center gap-2 bg-gray-100 p-2 rounded">
                     {file.type === "image" ? (
-                      <ImageIcon className="w-4 h-4 text-blue-600" />
+                      <ImageIcon className="w-3 h-3 sm:w-4 sm:h-4 text-blue-600" />
                     ) : file.type === "video" ? (
-                      <Video className="w-4 h-4 text-blue-600" />
+                      <Video className="w-3 h-3 sm:w-4 sm:h-4 text-blue-600" />
                     ) : (
-                      <File className="w-4 h-4 text-blue-600" />
+                      <File className="w-3 h-3 sm:w-4 sm:h-4 text-blue-600" />
                     )}
                     <a
                       href={file.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-sm text-blue-600 hover:text-blue-800 truncate"
+                      className="text-xs sm:text-sm text-blue-600 hover:text-blue-800 truncate"
                     >
                       {file.name}
                     </a>
@@ -308,13 +308,13 @@ Please check and leave feedback. Thank you!
 
       {/* Job Completion Form */}
       <Card className="border-0 shadow-lg">
-        <CardHeader>
-          <CardTitle className="text-lg text-blue-900">Job Completion Details</CardTitle>
+        <CardHeader className="px-4 sm:px-6 py-4 sm:py-6">
+          <CardTitle className="text-base sm:text-lg text-blue-900">Job Completion Details</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent className="space-y-4 sm:space-y-6 px-4 sm:px-6 pb-4 sm:pb-6">
           <div className="space-y-2">
-            <Label htmlFor="workDone" className="flex items-center gap-2">
-              <Wrench className="w-4 h-4" />
+            <Label htmlFor="workDone" className="flex items-center gap-2 text-xs sm:text-sm">
+              <Wrench className="w-3 h-3 sm:w-4 sm:h-4" />
               Work Done *
             </Label>
             <Textarea
@@ -323,14 +323,14 @@ Please check and leave feedback. Thank you!
               onChange={(e) => setJobFormData((prev) => ({ ...prev, workDone: e.target.value }))}
               placeholder="Describe the work completed in detail..."
               required
-              className="min-h-[100px]"
+              className="min-h-[80px] sm:min-h-[100px] text-sm"
             />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div className="space-y-2">
-              <Label htmlFor="extraCharges" className="flex items-center gap-2">
-                <DollarSign className="w-4 h-4" />
+              <Label htmlFor="extraCharges" className="flex items-center gap-2 text-xs sm:text-sm">
+                <DollarSign className="w-3 h-3 sm:w-4 sm:h-4" />
                 Extra Charges (RM)
               </Label>
               <Input
@@ -339,25 +339,26 @@ Please check and leave feedback. Thank you!
                 step="0.01"
                 value={jobFormData.extraCharges}
                 onChange={(e) => setJobFormData((prev) => ({ ...prev, extraCharges: e.target.value }))}
+                className="text-sm"
               />
             </div>
 
             <div className="space-y-2">
-              <Label className="flex items-center gap-2">
-                <DollarSign className="w-4 h-4" />
+              <Label className="flex items-center gap-2 text-xs sm:text-sm">
+                <DollarSign className="w-3 h-3 sm:w-4 sm:h-4" />
                 Final Amount (RM)
               </Label>
-              <Input value={finalAmount.toFixed(2)} disabled className="bg-gray-50 font-semibold text-green-600" />
+              <Input value={finalAmount.toFixed(2)} disabled className="bg-gray-50 font-semibold text-green-600 text-sm" />
             </div>
           </div>
 
           {/* File Upload */}
           <div className="space-y-2">
-            <Label className="flex items-center gap-2">
-              <Upload className="w-4 h-4" />
+            <Label className="flex items-center gap-2 text-xs sm:text-sm">
+              <Upload className="w-3 h-3 sm:w-4 sm:h-4" />
               Upload Files (Max 6 files)
             </Label>
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
+            <div className="border-2 border-dashed border-gray-300 rounded-lg p-3 sm:p-4 text-center">
               <input
                 ref={fileInputRef}
                 type="file"
@@ -371,16 +372,16 @@ Please check and leave feedback. Thank you!
                 variant="outline"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={uploadedFiles.length >= 6}
-                className="bg-transparent"
+                className="bg-transparent text-xs sm:text-sm"
               >
-                <Upload className="w-4 h-4 mr-2" />
+                <Upload className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                 Choose Files
               </Button>
               <p className="text-xs text-gray-500 mt-2">Images, Videos, or PDF files ({uploadedFiles.length}/6)</p>
             </div>
 
             {uploadedFiles.length > 0 && (
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3 mt-3 sm:mt-4">
                 {uploadedFiles.map((file) => (
                   <div key={file.id} className="relative group">
                     <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
@@ -392,20 +393,20 @@ Please check and leave feedback. Thank you!
                         />
                       ) : file.type === "video" ? (
                         <div className="w-full h-full flex items-center justify-center">
-                          <Video className="w-8 h-8 text-gray-400" />
+                          <Video className="w-6 h-6 sm:w-8 sm:h-8 text-gray-400" />
                         </div>
                       ) : (
                         <div className="w-full h-full flex items-center justify-center">
-                          <File className="w-8 h-8 text-gray-400" />
+                          <File className="w-6 h-6 sm:w-8 sm:h-8 text-gray-400" />
                         </div>
                       )}
                     </div>
                     <button
                       type="button"
                       onClick={() => removeFile(file.id)}
-                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="absolute -top-1 -right-1 sm:-top-2 sm:-right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
                     >
-                      <X className="w-3 h-3" />
+                      <X className="w-2 h-2 sm:w-3 sm:h-3" />
                     </button>
                     <p className="text-xs text-gray-500 mt-1 truncate">{file.file.name}</p>
                   </div>
@@ -415,8 +416,8 @@ Please check and leave feedback. Thank you!
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="remarks" className="flex items-center gap-2">
-              <FileText className="w-4 h-4" />
+            <Label htmlFor="remarks" className="flex items-center gap-2 text-xs sm:text-sm">
+              <FileText className="w-3 h-3 sm:w-4 sm:h-4" />
               Remarks
             </Label>
             <Textarea
@@ -424,31 +425,31 @@ Please check and leave feedback. Thank you!
               value={jobFormData.remarks}
               onChange={(e) => setJobFormData((prev) => ({ ...prev, remarks: e.target.value }))}
               placeholder="Additional remarks or notes..."
-              className="min-h-[80px]"
+              className="min-h-[60px] sm:min-h-[80px] text-sm"
             />
           </div>
 
           <div className="space-y-2">
-            <Label className="flex items-center gap-2">
-              <Clock className="w-4 h-4" />
+            <Label className="flex items-center gap-2 text-xs sm:text-sm">
+              <Clock className="w-3 h-3 sm:w-4 sm:h-4" />
               Completion Time
             </Label>
-            <Input value={new Date().toLocaleString()} disabled className="bg-gray-50" />
+            <Input value={new Date().toLocaleString()} disabled className="bg-gray-50 text-sm" />
           </div>
 
           <Button
             onClick={handleJobCompletion}
-            className="w-full bg-green-600 hover:bg-green-700 text-white py-3 text-lg font-semibold transition-all duration-200 hover:shadow-lg"
+            className="w-full bg-green-600 hover:bg-green-700 text-white py-2 sm:py-3 text-sm sm:text-lg font-semibold transition-all duration-200 hover:shadow-lg"
             disabled={!jobFormData.workDone.trim() || isUploading}
           >
-            <MessageCircle className="w-5 h-5 mr-2" />
+            <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2" />
             {isUploading ? "Uploading Files & Completing Job..." : "Finish Job & Notify Customer"}
           </Button>
           {isUploading && (
             <div className="space-y-2">
-              <p className="text-center text-blue-600">Uploading files to Firebase Storage...</p>
+              <p className="text-center text-blue-600 text-sm">Uploading files to Firebase Storage...</p>
               <Progress value={uploadProgress} className="w-full" />
-              <p className="text-center text-sm text-gray-500">
+              <p className="text-center text-xs sm:text-sm text-gray-500">
                 {uploadedFiles.length > 0 ? `${Math.round(uploadProgress)}% complete` : "Preparing upload..."}
               </p>
             </div>

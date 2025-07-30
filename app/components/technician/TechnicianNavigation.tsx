@@ -21,31 +21,35 @@ export default function TechnicianNavigation({
 
   return (
     <div className="bg-white border-b border-blue-100">
-      <div className="px-4 py-2">
-        <div className="flex gap-1">
+      <div className="px-3 py-2 sm:px-4">
+        <div className="flex flex-col sm:flex-row gap-1">
           <Button
             variant={currentPage === "assigned-jobs" ? "default" : "ghost"}
             onClick={() => onPageChange("assigned-jobs")}
-            className={
+            className={`flex-1 text-xs sm:text-sm ${
               currentPage === "assigned-jobs"
                 ? "bg-blue-600 text-white"
                 : "text-blue-700 hover:bg-blue-50 bg-transparent"
-            }
+            }`}
           >
-            <ClipboardList className="w-4 h-4 mr-2" />
-            Assigned Jobs ({assignedJobsCount})
+            <ClipboardList className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+            <span className="hidden sm:inline">Assigned Jobs</span>
+            <span className="sm:hidden">Assigned</span>
+            <span className="ml-1">({assignedJobsCount})</span>
           </Button>
           <Button
             variant={currentPage === "completed-jobs" ? "default" : "ghost"}
             onClick={() => onPageChange("completed-jobs")}
-            className={
+            className={`flex-1 text-xs sm:text-sm ${
               currentPage === "completed-jobs"
                 ? "bg-green-600 text-white"
                 : "text-blue-700 hover:bg-blue-50 bg-transparent"
-            }
+            }`}
           >
-            <CheckCircle className="w-4 h-4 mr-2" />
-            Completed Jobs ({completedJobsCount})
+            <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+            <span className="hidden sm:inline">Completed Jobs</span>
+            <span className="sm:hidden">Completed</span>
+            <span className="ml-1">({completedJobsCount})</span>
           </Button>
         </div>
       </div>

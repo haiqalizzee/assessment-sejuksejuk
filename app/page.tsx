@@ -5,7 +5,6 @@ import LandingPage from "./components/LandingPage"
 import Login from "./components/Login"
 import AdminPortal from "./components/AdminPortal"
 import TechnicianPortal from "./components/TechnicianPortal"
-import FirebaseError from "./components/FirebaseError"
 import { useAuth } from "@/contexts/AuthContext"
 import type { UserRole } from "./types"
 
@@ -46,11 +45,6 @@ export default function App() {
     }
   }
 
-  // Show Firebase error if not configured
-  if (!isConfigured) {
-    return <FirebaseError />
-  }
-
   // Show loading screen while Firebase initializes
   if (loading) {
     return (
@@ -59,7 +53,7 @@ export default function App() {
           <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
             <div className="w-8 h-8 bg-white rounded-full"></div>
           </div>
-          <p className="text-blue-900 font-semibold">Initializing...</p>
+          <p className="text-blue-900 font-semibold">Loading...</p>
         </div>
       </div>
     )

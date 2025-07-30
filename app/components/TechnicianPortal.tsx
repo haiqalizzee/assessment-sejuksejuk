@@ -112,13 +112,6 @@ export default function TechnicianPortal({ onBack }: TechnicianPortalProps) {
         return (
           <div>
             <AssignedJobs jobs={assignedJobs} onJobSelect={handleJobSelect} />
-            {/* Debug info - remove this later */}
-            <div className="mt-8 p-4 bg-gray-100 rounded-lg">
-              <h3 className="font-semibold mb-2">Debug Info:</h3>
-              <p><strong>Current User:</strong> {userProfile?.name} ({userProfile?.email})</p>
-              <p><strong>Assigned Jobs:</strong> {assignedJobs.length}</p>
-              <p><strong>Completed Jobs:</strong> {completedJobs.length}</p>
-            </div>
           </div>
         )
     }
@@ -138,7 +131,7 @@ export default function TechnicianPortal({ onBack }: TechnicianPortalProps) {
       />
 
       {/* Main Content */}
-      <main className="p-4">{renderContent()}</main>
+      <main className="px-3 py-3 sm:px-4 sm:py-4">{renderContent()}</main>
     </div>
   )
 }
