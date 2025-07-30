@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react"
 import LandingPage from "./components/LandingPage"
-import Login from "./components/Login"
 import AdminPortal from "./components/AdminPortal"
 import TechnicianPortal from "./components/TechnicianPortal"
 import { useAuth } from "@/contexts/AuthContext"
@@ -11,7 +10,6 @@ import type { UserRole } from "./types"
 export default function App() {
   const { user, userProfile, logout, loading, isConfigured } = useAuth()
   const [currentRole, setCurrentRole] = useState<UserRole>("landing")
-  const [pendingRole, setPendingRole] = useState<UserRole | null>(null)
 
   useEffect(() => {
     if (!loading && user && userProfile) {
@@ -24,22 +22,13 @@ export default function App() {
   }, [user, userProfile, loading])
 
   const handleRoleSelect = (role: UserRole) => {
-    if (role === "admin" || role === "technician") {
-      setPendingRole(role)
-      setCurrentRole("login")
-    }
-  }
-
-  const handleLogin = (role: UserRole) => {
     setCurrentRole(role)
-    setPendingRole(null)
   }
 
   const handleLogout = async () => {
     try {
       await logout()
       setCurrentRole("landing")
-      setPendingRole(null)
     } catch (error) {
       console.error("Logout error:", error)
     }
@@ -60,10 +49,6 @@ export default function App() {
   }
 
   const renderCurrentView = () => {
-    if (currentRole === "login" && pendingRole) {
-      return <Login onLogin={handleLogin} onBack={() => setCurrentRole("landing")} initialRole={pendingRole} />
-    }
-
     switch (currentRole) {
       case "admin":
         return <AdminPortal onBack={handleLogout} />

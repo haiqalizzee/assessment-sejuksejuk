@@ -8,7 +8,7 @@ import CreateOrderForm from "./admin/CreateOrderForm"
 import OrdersList from "./admin/OrdersList"
 import KPIDashboard from "./admin/KPIDashboard"
 import TechnicianManagement from "./admin/TechnicianManagement"
-import { ordersService, kpiService } from "@/lib/firebase-services"
+import { ordersService } from "@/lib/firebase-services"
 import type { Order, AdminPage } from "@/app/types"
 
 interface AdminPortalProps {

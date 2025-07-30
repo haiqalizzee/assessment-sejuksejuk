@@ -1,9 +1,12 @@
 "use client"
 
+import { useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Plus, FileText, BarChart3 } from "lucide-react"
+import { Plus, FileText, BarChart3, Eye } from "lucide-react"
+import { Button } from "@/components/ui/button"
 import type { Order, AdminPage } from "@/app/types"
+import OrderDetail from "./OrderDetail"
 
 interface AdminDashboardProps {
   orders: Order[]
@@ -11,6 +14,8 @@ interface AdminDashboardProps {
 }
 
 export default function AdminDashboard({ orders, onPageChange }: AdminDashboardProps) {
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
+
   const getStatusBadge = (status: Order["status"]) => {
     switch (status) {
       case "pending":
@@ -22,6 +27,14 @@ export default function AdminDashboard({ orders, onPageChange }: AdminDashboardP
       default:
         return <Badge className="bg-gray-100 text-gray-800">{status}</Badge>
     }
+  }
+
+  const handleViewOrder = (order: Order) => {
+    setSelectedOrder(order)
+  }
+
+  if (selectedOrder) {
+    return <OrderDetail order={selectedOrder} onBack={() => setSelectedOrder(null)} />
   }
 
   return (
@@ -81,14 +94,14 @@ export default function AdminDashboard({ orders, onPageChange }: AdminDashboardP
         <CardContent>
           <div className="space-y-4">
             {orders.slice(0, 3).map((order) => (
-              <div key={order.id} className="flex items-center justify-between p-4 bg-blue-50 rounded-lg">
-                <div>
+              <div key={order.id} className="flex items-center justify-between p-4 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors cursor-pointer" onClick={() => handleViewOrder(order)}>
+                <div className="flex-1">
                   <p className="font-semibold text-blue-900">{order.customerName}</p>
                   <p className="text-sm text-blue-600">
                     {order.serviceType} • {order.assignedTechnician}
                   </p>
                 </div>
-                <div className="text-right">
+                <div className="text-right mr-4">
                   {getStatusBadge(order.status)}
                   <p className="text-sm font-semibold text-green-600 mt-1">
                     RM {order.status === "completed" && order.finalAmount ? order.finalAmount.toFixed(2) : order.quotedPrice}
@@ -99,6 +112,17 @@ export default function AdminDashboard({ orders, onPageChange }: AdminDashboardP
                     </p>
                   )}
                 </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="text-blue-600 hover:text-blue-800"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    handleViewOrder(order)
+                  }}
+                >
+                  <Eye className="w-4 h-4" />
+                </Button>
               </div>
             ))}
           </div>
