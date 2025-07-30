@@ -6,33 +6,54 @@ import TechnicianNavigation from "./technician/TechnicianNavigation"
 import AssignedJobs from "./technician/AssignedJobs"
 import CompletedJobs from "./technician/CompletedJobs"
 import JobDetail from "./technician/JobDetail"
-import { ordersService } from "@/lib/firebase-services"
+import { ordersService, techniciansService } from "@/lib/firebase-services"
 import { useAuth } from "@/contexts/AuthContext"
-import type { Order, TechnicianPage } from "@/app/types"
+import type { Order, TechnicianPage, Technician } from "@/app/types"
 
 interface TechnicianPortalProps {
   onBack: () => void
 }
 
 export default function TechnicianPortal({ onBack }: TechnicianPortalProps) {
-  const { userProfile } = useAuth()
+  const { user } = useAuth()
   const [currentPage, setCurrentPage] = useState<TechnicianPage>("assigned-jobs")
   const [selectedJob, setSelectedJob] = useState<Order | null>(null)
   const [assignedJobs, setAssignedJobs] = useState<Order[]>([])
   const [completedJobs, setCompletedJobs] = useState<Order[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [technician, setTechnician] = useState<Technician | null>(null)
 
   useEffect(() => {
-    console.log("User profile:", userProfile)
-    if (userProfile?.id) {  // Changed from name to id
-      loadJobs()
+    if (user?.email) {
+      loadTechnicianData()
     }
-  }, [userProfile])
+  }, [user])
 
-  const loadJobs = async () => {
+  const loadTechnicianData = async () => {
+    try {
+      // Get all technicians and find by email
+      const technicians = await techniciansService.getAll()
+      console.log("All technicians:", technicians)
+      console.log("Current user email:", user?.email)
+      
+      const technicianData = technicians.find(t => t.email === user?.email)
+      console.log("Found technician data:", technicianData)
+      
+      if (technicianData) {
+        console.log("Setting technician with ID:", technicianData.id)
+        setTechnician(technicianData)
+        loadJobs(technicianData.id)
+      } else {
+        console.error("No technician found for email:", user?.email)
+      }
+    } catch (error) {
+      console.error("Error loading technician data:", error)
+    }
+  }
+
+  const loadJobs = async (technicianId: string) => {
     try {
       setIsLoading(true)
-      const technicianId = userProfile?.id || ""  // Use ID instead of name
       console.log("Loading jobs for technician:", technicianId)
       
       // Get jobs by technician ID
@@ -77,7 +98,7 @@ export default function TechnicianPortal({ onBack }: TechnicianPortalProps) {
           uploadedFiles: completionData.uploadedFiles,
           completedAt: new Date().toISOString(),
         })
-        await loadJobs() // Reload jobs
+        await loadJobs(technician?.id || "")
       } catch (error) {
         console.error("Error completing job:", error)
       }
@@ -112,6 +133,14 @@ export default function TechnicianPortal({ onBack }: TechnicianPortalProps) {
         return (
           <div>
             <AssignedJobs jobs={assignedJobs} onJobSelect={handleJobSelect} />
+            {/* Debug info - remove this later */}
+            <div className="mt-8 p-4 bg-gray-100 rounded-lg">
+              <h3 className="font-semibold mb-2">Debug Info:</h3>
+              <p><strong>Current User:</strong> {technician?.name} ({technician?.email})</p>
+              <p><strong>Technician ID:</strong> {technician?.id}</p>
+              <p><strong>Assigned Jobs:</strong> {assignedJobs.length}</p>
+              <p><strong>Completed Jobs:</strong> {completedJobs.length}</p>
+            </div>
           </div>
         )
     }

@@ -116,19 +116,62 @@ export const ordersService = {
   // Get orders by technician
   async getByTechnician(technicianId: string): Promise<Order[]> {
     try {
+      console.log("Getting orders for technician ID:", technicianId)
       const firestore = getFirebaseDb()
-      const querySnapshot = await getDocs(
-        query(
-          collection(firestore, ORDERS_COLLECTION),
-          where("assignedTechnicianId", "==", technicianId),
-          orderBy("createdAt", "desc"),
-        ),
-      )
-      return querySnapshot.docs.map((doc) => ({
+      
+      // First, let's get all orders to see what's in there
+      const allOrdersSnapshot = await getDocs(collection(firestore, ORDERS_COLLECTION))
+      console.log("All orders in collection:", allOrdersSnapshot.docs.map(doc => ({
         id: doc.id,
-        ...doc.data(),
-        createdAt: convertTimestamp(doc.data().createdAt),
-      })) as Order[]
+        ...doc.data()
+      })))
+      
+      // Now try the filtered query
+      // Remove orderBy to avoid needing composite index
+      const q = query(
+        collection(firestore, ORDERS_COLLECTION),
+        where("assignedTechnicianId", "==", technicianId)
+      )
+      console.log("Query created with collection:", ORDERS_COLLECTION)
+      console.log("Query conditions:", {
+        field: "assignedTechnicianId",
+        operator: "==",
+        value: technicianId
+      })
+      
+      const querySnapshot = await getDocs(q)
+      console.log("Query snapshot size:", querySnapshot.size)
+      
+      if (querySnapshot.empty) {
+        console.log("No orders found. Double checking all orders for this technician ID...")
+        // Manually check all orders to see if any match
+        const allOrders = allOrdersSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }))
+        const matchingOrders = allOrders.filter(order => order.assignedTechnicianId === technicianId)
+        console.log("Manually found matching orders:", matchingOrders)
+      }
+      
+      const orders = querySnapshot.docs.map((doc) => {
+        const data = doc.data()
+        console.log("Order data:", { id: doc.id, ...data })
+        return {
+          id: doc.id,
+          ...data,
+          createdAt: convertTimestamp(data.createdAt),
+        }
+      }) as Order[]
+      
+      // Sort orders by createdAt in memory
+      const sortedOrders = orders.sort((a, b) => {
+        const dateA = new Date(a.createdAt).getTime()
+        const dateB = new Date(b.createdAt).getTime()
+        return dateB - dateA // descending order
+      })
+      
+      console.log("Final processed orders:", sortedOrders)
+      return sortedOrders
     } catch (error) {
       console.error("Error getting orders by technician:", error)
       return []
@@ -154,12 +197,20 @@ export const ordersService = {
   // Create new order with custom ID
   async createWithId(id: string, orderData: Omit<Order, "id">): Promise<void> {
     try {
+      console.log("Creating order with ID:", id)
+      console.log("Order data:", orderData)
+      console.log("Assigned technician ID:", orderData.assignedTechnicianId)
+      
       const firestore = getFirebaseDb()
-      await setDoc(doc(firestore, ORDERS_COLLECTION, id), {
+      const orderDoc = {
         ...orderData,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
-      })
+      }
+      
+      console.log("Final order document:", orderDoc)
+      await setDoc(doc(firestore, ORDERS_COLLECTION, id), orderDoc)
+      console.log("Order created successfully")
     } catch (error) {
       console.error("Error creating order with custom ID:", error)
       throw error
@@ -223,12 +274,23 @@ export const techniciansService = {
   async getAll(): Promise<Technician[]> {
     try {
       const firestore = getFirebaseDb()
+      console.log("Getting technicians from collection:", TECHNICIANS_COLLECTION)
+      
       const querySnapshot = await getDocs(query(collection(firestore, TECHNICIANS_COLLECTION), orderBy("name")))
-      return querySnapshot.docs.map((doc) => ({
-        id: doc.id, // Use the document ID which is now our TECH### format
-        ...doc.data(),
-        joinedDate: convertTimestamp(doc.data().joinedDate),
-      })) as Technician[]
+      console.log("Found technicians count:", querySnapshot.size)
+      
+      const technicians = querySnapshot.docs.map((doc) => {
+        const data = doc.data()
+        console.log("Technician document:", { id: doc.id, ...data })
+        return {
+          id: doc.id, // Use the document ID which is now our TECH### format
+          ...data,
+          joinedDate: convertTimestamp(data.joinedDate),
+        }
+      }) as Technician[]
+      
+      console.log("Processed technicians:", technicians)
+      return technicians
     } catch (error) {
       console.error("Error getting technicians:", error)
       return []
@@ -259,14 +321,19 @@ export const techniciansService = {
     try {
       const firestore = getFirebaseDb()
       const technicianId = await generateTechnicianId()
+      console.log("Generated technician ID:", technicianId)
       
       // Use setDoc with the custom ID as document ID
-      await setDoc(doc(firestore, TECHNICIANS_COLLECTION, technicianId), {
+      const technicianDoc = {
         ...technicianData,
         joinedDate: serverTimestamp(),
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
-      })
+      }
+      console.log("Creating technician document:", { id: technicianId, ...technicianDoc })
+      
+      await setDoc(doc(firestore, TECHNICIANS_COLLECTION, technicianId), technicianDoc)
+      console.log("Technician created successfully with ID:", technicianId)
 
       return technicianId
     } catch (error) {

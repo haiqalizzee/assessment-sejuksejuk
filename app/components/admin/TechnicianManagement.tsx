@@ -82,19 +82,16 @@ export default function TechnicianManagement() {
           description: `${formData.name} has been updated successfully.`,
         })
       } else {
-        // Create new technician with Firebase Auth
-        await register(formData.email, formData.password, {
-          name: formData.name,
-          role: "technician",
-        })
-
         // Create technician profile
-        await techniciansService.create({
+        const technicianId = await techniciansService.create({
           name: formData.name,
           phone: formData.phone,
           email: formData.email,
           joinedDate: new Date().toISOString().split("T")[0]
         })
+
+        // Create Firebase Auth account without user profile
+        await register(formData.email, formData.password, {})
 
         toast({
           title: "Technician Added",

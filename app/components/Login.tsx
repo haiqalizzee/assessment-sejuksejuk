@@ -1,16 +1,14 @@
 "use client"
 
-import type React from "react"
-
 import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { toast } from "@/hooks/use-toast"
-import { Snowflake, User, Lock, ArrowLeft } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { ArrowLeft } from "lucide-react"
 import { useAuth } from "@/contexts/AuthContext"
+import { useToast } from "@/components/ui/use-toast"
 import type { UserRole } from "@/app/types"
+import { techniciansService } from "@/lib/firebase-services"
 
 interface LoginProps {
   onLogin: (role: UserRole) => void
@@ -20,6 +18,7 @@ interface LoginProps {
 
 export default function Login({ onLogin, onBack, initialRole }: LoginProps) {
   const { login } = useAuth()
+  const { toast } = useToast()
   const [credentials, setCredentials] = useState({
     email: "",
     password: "",
@@ -33,15 +32,28 @@ export default function Login({ onLogin, onBack, initialRole }: LoginProps) {
     try {
       await login(credentials.email, credentials.password)
 
-      toast({
-        title: "Login Successful",
-        description: `Welcome back!`,
-      })
+      // For admin, use email prefix
+      if (credentials.email.startsWith("admin")) {
+        toast({
+          title: "Login Successful",
+          description: "Welcome back, Admin!",
+        })
+        onLogin("admin")
+      } else {
+        // For technician, check technicians collection
+        const technicians = await techniciansService.getAll()
+        const technician = technicians.find(t => t.email === credentials.email)
 
-      // Determine role based on email domain or user profile
-      // For demo purposes, we'll use email prefixes
-      const role = credentials.email.startsWith("admin") ? "admin" : "technician"
-      onLogin(role as UserRole)
+        if (technician) {
+          toast({
+            title: "Login Successful",
+            description: `Welcome back, ${technician.name}!`,
+          })
+          onLogin("technician")
+        } else {
+          throw new Error("No technician account found")
+        }
+      }
     } catch (error: any) {
       console.error("Login error:", error)
       toast({
@@ -56,72 +68,55 @@ export default function Login({ onLogin, onBack, initialRole }: LoginProps) {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-cyan-100 flex items-center justify-center px-4">
-      <div className="w-full max-w-md">
-        <Card className="border-0 shadow-2xl bg-white/95 backdrop-blur-sm">
-          <CardHeader className="text-center pb-6">
-            <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Snowflake className="w-8 h-8 text-white" />
-            </div>
-            <CardTitle className="text-2xl font-bold text-blue-900">
+      <Card className="w-full max-w-md">
+        <CardContent className="pt-6">
+          <div className="flex items-center mb-6">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="mr-2"
+              onClick={onBack}
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <h2 className="text-2xl font-bold">
               {initialRole === "admin" ? "Admin Login" : "Technician Login"}
-            </CardTitle>
-            <CardDescription className="text-blue-600">
-              Sign in to access {initialRole === "admin" ? "admin portal" : "technician portal"}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <form onSubmit={handleLogin} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email" className="flex items-center gap-2 text-sm font-medium text-blue-700">
-                  <User className="w-4 h-4" />
-                  Email Address
-                </Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={credentials.email}
-                  onChange={(e) => setCredentials((prev) => ({ ...prev, email: e.target.value }))}
-                  placeholder="Enter your email"
-                  required
-                  className="bg-white"
-                />
-              </div>
+            </h2>
+          </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="password" className="flex items-center gap-2 text-sm font-medium text-blue-700">
-                  <Lock className="w-4 h-4" />
-                  Password
-                </Label>
-                <Input
-                  id="password"
-                  type="password"
-                  value={credentials.password}
-                  onChange={(e) => setCredentials((prev) => ({ ...prev, password: e.target.value }))}
-                  placeholder="Enter your password"
-                  required
-                  className="bg-white"
-                />
-              </div>
-
-              <Button
-                type="submit"
-                disabled={isLoading}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 text-lg font-semibold transition-all duration-200 hover:shadow-lg"
-              >
-                {isLoading ? "Signing in..." : "Sign In"}
-              </Button>
-            </form>
-
-            <div className="text-center">
-              <Button variant="ghost" onClick={onBack} className="text-blue-600 hover:bg-blue-50">
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Back to Home
-              </Button>
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div>
+              <Input
+                type="email"
+                placeholder="Email"
+                value={credentials.email}
+                onChange={(e) =>
+                  setCredentials({ ...credentials, email: e.target.value })
+                }
+                required
+              />
             </div>
-
-          </CardContent>
-        </Card>
-      </div>
+            <div>
+              <Input
+                type="password"
+                placeholder="Password"
+                value={credentials.password}
+                onChange={(e) =>
+                  setCredentials({ ...credentials, password: e.target.value })
+                }
+                required
+              />
+            </div>
+            <Button
+              type="submit"
+              className="w-full bg-blue-600 hover:bg-blue-700"
+              disabled={isLoading}
+            >
+              {isLoading ? "Logging in..." : "Login"}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
     </div>
   )
 }

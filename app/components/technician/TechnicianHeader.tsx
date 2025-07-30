@@ -18,7 +18,7 @@ export default function TechnicianHeader({ onBack }: TechnicianHeaderProps) {
             </div>
             <div>
               <h1 className="text-base sm:text-lg font-bold text-blue-900">Technician Portal</h1>
-              <p className="text-xs sm:text-sm text-blue-600">Ali - Sejuk Sejuk Service</p>
+              <p className="text-xs sm:text-sm text-blue-600">name Sejuk Sejuk Service</p>
             </div>
           </div>
           <Button

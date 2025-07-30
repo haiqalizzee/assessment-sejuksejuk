@@ -10,7 +10,6 @@ import {
   createUserWithEmailAndPassword,
 } from "firebase/auth"
 import { getFirebaseAuth } from "@/lib/firebase-services"
-import { usersService } from "@/lib/firebase-services"
 import { isConfigValid } from "@/lib/firebase"
 
 interface AuthContextType {
@@ -55,31 +54,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         unsubscribe = onAuthStateChanged(auth, async (user) => {
           setUser(user)
-
-          if (user) {
-            // Fetch user profile from Firestore
-            try {
-              const profile = await usersService.getByEmail(user.email!)
-              setUserProfile(
-                profile || {
-                  email: user.email,
-                  role: user.email?.startsWith("admin") ? "admin" : "technician",
-                  name: user.email?.split("@")[0] || "User",
-                },
-              )
-            } catch (error) {
-              console.error("Error fetching user profile:", error)
-              // Create a basic profile if none exists
-              setUserProfile({
-                email: user.email,
-                role: user.email?.startsWith("admin") ? "admin" : "technician",
-                name: user.email?.split("@")[0] || "User",
-              })
-            }
-          } else {
-            setUserProfile(null)
-          }
-
           setLoading(false)
         })
       } catch (error) {
@@ -114,14 +88,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     try {
       const auth = getFirebaseAuth()
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password)
-
-      // Create user profile in Firestore
-      await usersService.create({
-        uid: userCredential.user.uid,
-        email: userCredential.user.email,
-        ...userData,
-      })
+      await createUserWithEmailAndPassword(auth, email, password)
     } catch (error: any) {
       console.error("Registration error:", error)
       throw new Error(error.message || "Registration failed")

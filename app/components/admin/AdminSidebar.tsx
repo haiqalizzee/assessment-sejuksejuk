@@ -43,6 +43,17 @@ export default function AdminSidebar({ currentPage, onPageChange, onBack, isOpen
             <X className="w-5 h-5" />
           </Button>
         </div>
+        <div className="mt-4">
+          <Button
+            onClick={onBack}
+            variant="outline"
+            size="sm"
+            className="w-full bg-transparent border-red-200 text-red-700 hover:bg-red-50 text-xs lg:text-sm"
+          >
+            <ArrowLeft className="w-3 h-3 mr-2" />
+            Logout
+          </Button>
+        </div>
       </div>
 
       <nav className="p-4">
@@ -64,17 +75,6 @@ export default function AdminSidebar({ currentPage, onPageChange, onBack, isOpen
           ))}
         </div>
       </nav>
-
-      <div className="absolute bottom-4 left-4 right-4">
-        <Button
-          onClick={onBack}
-          variant="outline"
-          className="w-full bg-transparent border-blue-200 text-blue-700 hover:bg-blue-50 text-sm lg:text-base"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Home
-        </Button>
-      </div>
     </div>
   )
 }

@@ -49,6 +49,7 @@ export default function CreateOrderForm({ onOrderCreate }: CreateOrderFormProps)
   const loadTechnicians = async () => {
     try {
       const techList = await techniciansService.getAll()
+      console.log("Loaded technicians:", techList)
       setTechnicians(techList)
     } catch (error) {
       console.error("Error loading technicians:", error)
@@ -65,8 +66,18 @@ export default function CreateOrderForm({ onOrderCreate }: CreateOrderFormProps)
   }
 
   const handleTechnicianSelect = (technicianId: string) => {
+    console.log("Selecting technician with ID:", technicianId)
+    console.log("Available technicians:", technicians)
+    
     const selectedTechnician = technicians.find(tech => tech.id === technicianId)
+    console.log("Found technician:", selectedTechnician)
+    
     if (selectedTechnician) {
+      console.log("Setting technician data:", {
+        id: technicianId,
+        name: selectedTechnician.name
+      })
+      
       setFormData(prev => ({
         ...prev,
         assignedTechnicianId: technicianId,
@@ -110,12 +121,17 @@ Please contact the customer and update the order status.`
     try {
       const orderId = generateOrderId()
       
+      console.log("Selected technician ID:", formData.assignedTechnicianId)
+      console.log("Selected technician name:", formData.assignedTechnician)
+      
       const newOrderData = {
         ...formData,
         quotedPrice: Number.parseFloat(formData.quotedPrice),
         status: "pending" as const,
         createdAt: new Date().toISOString().split("T")[0],
       }
+      
+      console.log("New order data:", newOrderData)
 
       // Show confirmation dialog using SweetAlert
       const { isConfirmed } = await (window as any).Swal.fire({
