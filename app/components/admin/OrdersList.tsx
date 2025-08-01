@@ -167,7 +167,7 @@ export default function OrdersList({
           )}
         </div>
       </div>
-      
+
       <Card className="border-0 shadow-lg">
         <CardContent>
           {/* Mobile Card View */}
@@ -291,7 +291,6 @@ export default function OrdersList({
         {/* Results Summary */}
         <span>
           Showing {orders.length} of {totalItems} orders
-          {hasActiveFilters}
         </span>
         {/* Pagination Controls */}
         {totalPages > 1 && onPageChange && (
