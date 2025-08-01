@@ -1,20 +1,18 @@
 "use client"
 
-import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Plus, FileText, BarChart3, Eye } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import type { Order, AdminPage } from "@/app/types"
-import OrderDetail from "./OrderDetail"
+import type { Order } from "@/app/types"
 
 interface AdminDashboardProps {
   orders: Order[]
-  onPageChange: (page: AdminPage) => void
 }
 
-export default function AdminDashboard({ orders, onPageChange }: AdminDashboardProps) {
-  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
+export default function AdminDashboard({ orders }: AdminDashboardProps) {
+  const router = useRouter()
 
   const getStatusBadge = (status: Order["status"]) => {
     switch (status) {
@@ -30,11 +28,7 @@ export default function AdminDashboard({ orders, onPageChange }: AdminDashboardP
   }
 
   const handleViewOrder = (order: Order) => {
-    setSelectedOrder(order)
-  }
-
-  if (selectedOrder) {
-    return <OrderDetail order={selectedOrder} onBack={() => setSelectedOrder(null)} />
+    router.push(`/admin/orders/${order.id}`)
   }
 
   return (
@@ -47,7 +41,7 @@ export default function AdminDashboard({ orders, onPageChange }: AdminDashboardP
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <Card
           className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer"
-          onClick={() => onPageChange("create-order")}
+          onClick={() => router.push("/admin/create-order")}
         >
           <CardHeader className="text-center pb-4">
             <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -60,7 +54,7 @@ export default function AdminDashboard({ orders, onPageChange }: AdminDashboardP
 
         <Card
           className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer"
-          onClick={() => onPageChange("all-orders")}
+          onClick={() => router.push("/admin/all-orders")}
         >
           <CardHeader className="text-center pb-4">
             <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -73,7 +67,7 @@ export default function AdminDashboard({ orders, onPageChange }: AdminDashboardP
 
         <Card
           className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer"
-          onClick={() => onPageChange("kpi")}
+          onClick={() => router.push("/admin/kpi")}
         >
           <CardHeader className="text-center pb-4">
             <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">

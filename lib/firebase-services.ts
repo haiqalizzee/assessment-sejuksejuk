@@ -148,7 +148,7 @@ export const ordersService = {
         const allOrders = allOrdersSnapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data()
-        }))
+        })) as any[]
         const matchingOrders = allOrders.filter(order => order.assignedTechnicianId === technicianId)
         console.log("Manually found matching orders:", matchingOrders)
       }
@@ -175,6 +175,25 @@ export const ordersService = {
     } catch (error) {
       console.error("Error getting orders by technician:", error)
       return []
+    }
+  },
+
+  // Get order by ID
+  async getById(id: string): Promise<Order | null> {
+    try {
+      const firestore = getFirebaseDb()
+      const docSnap = await getDoc(doc(firestore, ORDERS_COLLECTION, id))
+      if (docSnap.exists()) {
+        return {
+          id: docSnap.id,
+          ...docSnap.data(),
+          createdAt: convertTimestamp(docSnap.data().createdAt),
+        } as Order
+      }
+      return null
+    } catch (error) {
+      console.error("Error getting order:", error)
+      return null
     }
   },
 

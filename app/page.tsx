@@ -1,8 +1,8 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import LandingPage from "./components/LandingPage"
-import AdminPortal from "./components/AdminPortal"
 import TechnicianPortal from "./components/TechnicianPortal"
 import { useAuth } from "@/contexts/AuthContext"
 import type { UserRole } from "./types"
@@ -10,6 +10,7 @@ import type { UserRole } from "./types"
 export default function App() {
   const { user, userProfile, logout, loading, isConfigured } = useAuth()
   const [currentRole, setCurrentRole] = useState<UserRole>("landing")
+  const router = useRouter()
 
   useEffect(() => {
     if (!loading && user && userProfile) {
@@ -51,7 +52,9 @@ export default function App() {
   const renderCurrentView = () => {
     switch (currentRole) {
       case "admin":
-        return <AdminPortal onBack={handleLogout} />
+        // Redirect to admin dashboard instead of rendering AdminPortal
+        router.push("/admin/dashboard")
+        return null
       case "technician":
         return <TechnicianPortal onBack={handleLogout} />
       default:

@@ -5,14 +5,15 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { ArrowLeft, MapPin, Phone, User, FileText, DollarSign, Clock, Upload, Image as ImageIcon, Video, File, Calendar, Wrench, MessageSquare, Eye } from "lucide-react"
+import { useRouter } from "next/navigation"
 import type { Order } from "@/app/types"
 
 interface OrderDetailProps {
   order: Order
-  onBack: () => void
 }
 
-export default function OrderDetail({ order, onBack }: OrderDetailProps) {
+export default function OrderDetail({ order }: OrderDetailProps) {
+  const router = useRouter()
   const getStatusBadge = (status: Order["status"]) => {
     switch (status) {
       case "pending":
@@ -46,7 +47,7 @@ export default function OrderDetail({ order, onBack }: OrderDetailProps) {
               <Button 
                 variant="ghost" 
                 size="sm" 
-                onClick={onBack}
+                onClick={() => router.back()}
               className="hover:bg-gray-100 p-2"
               >
               <ArrowLeft className="w-4 h-4" />

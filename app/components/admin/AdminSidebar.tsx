@@ -2,25 +2,35 @@
 
 import { Button } from "@/components/ui/button"
 import { LayoutDashboard, Plus, FileText, BarChart3, ArrowLeft, Snowflake, X, Users } from "lucide-react"
-import type { AdminPage } from "@/app/types"
+import { useRouter, usePathname } from "next/navigation"
+import { useAuth } from "@/contexts/AuthContext"
 
 interface AdminSidebarProps {
-  currentPage: AdminPage
-  onPageChange: (page: AdminPage) => void
-  onBack: () => void
   isOpen: boolean
   onClose: () => void
 }
 
 const sidebarItems = [
-  { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { id: "create-order", label: "Create Order", icon: Plus },
-  { id: "all-orders", label: "All Orders", icon: FileText },
-  { id: "technicians", label: "Technicians", icon: Users },
-  { id: "kpi", label: "KPI Dashboard", icon: BarChart3 },
+  { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, path: "/admin/dashboard" },
+  { id: "create-order", label: "Create Order", icon: Plus, path: "/admin/create-order" },
+  { id: "all-orders", label: "All Orders", icon: FileText, path: "/admin/all-orders" },
+  { id: "technicians", label: "Technicians", icon: Users, path: "/admin/technicians" },
+  { id: "kpi", label: "KPI Dashboard", icon: BarChart3, path: "/admin/kpi" },
 ]
 
-export default function AdminSidebar({ currentPage, onPageChange, onBack, isOpen, onClose }: AdminSidebarProps) {
+export default function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
+  const router = useRouter()
+  const pathname = usePathname()
+  const { logout } = useAuth()
+
+  const handleLogout = async () => {
+    try {
+      await logout()
+      router.push("/")
+    } catch (error) {
+      console.error("Logout error:", error)
+    }
+  }
   return (
     <div
       className={`
@@ -45,7 +55,7 @@ export default function AdminSidebar({ currentPage, onPageChange, onBack, isOpen
         </div>
         <div className="mt-4">
           <Button
-            onClick={onBack}
+            onClick={handleLogout}
             variant="outline"
             size="sm"
             className="w-full bg-transparent border-red-200 text-red-700 hover:bg-red-50 text-xs lg:text-sm"
@@ -62,11 +72,11 @@ export default function AdminSidebar({ currentPage, onPageChange, onBack, isOpen
             <button
               key={item.id}
               onClick={() => {
-                onPageChange(item.id as AdminPage)
+                router.push(item.path)
                 onClose() // Close sidebar on mobile after selection
               }}
               className={`w-full flex items-center gap-3 px-3 lg:px-4 py-2 lg:py-3 rounded-lg text-left transition-all duration-200 text-sm lg:text-base ${
-                currentPage === item.id ? "bg-blue-100 text-blue-900 font-semibold" : "text-blue-700 hover:bg-blue-50"
+                pathname === item.path ? "bg-blue-100 text-blue-900 font-semibold" : "text-blue-700 hover:bg-blue-50"
               }`}
             >
               <item.icon className="w-4 lg:w-5 h-4 lg:h-5 flex-shrink-0" />

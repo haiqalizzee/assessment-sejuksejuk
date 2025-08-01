@@ -51,4 +51,3 @@ export interface LoginCredentials {
 
 export type AdminPage = "dashboard" | "create-order" | "all-orders" | "kpi" | "technicians"
 export type TechnicianPage = "assigned-jobs" | "completed-jobs" | "job-detail"
-export type UserRole = "landing" | "admin" | "technician"

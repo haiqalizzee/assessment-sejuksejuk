@@ -1,20 +1,19 @@
 "use client"
 
-import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Eye } from "lucide-react"
 import type { Order } from "@/app/types"
-import OrderDetail from "./OrderDetail"
 
 interface OrdersListProps {
   orders: Order[]
 }
 
 export default function OrdersList({ orders }: OrdersListProps) {
-  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
+  const router = useRouter()
 
   const getStatusBadge = (status: Order["status"]) => {
     switch (status) {
@@ -30,11 +29,7 @@ export default function OrdersList({ orders }: OrdersListProps) {
   }
 
   const handleViewOrder = (order: Order) => {
-    setSelectedOrder(order)
-  }
-
-  if (selectedOrder) {
-    return <OrderDetail order={selectedOrder} onBack={() => setSelectedOrder(null)} />
+    router.push(`/admin/orders/${order.id}`)
   }
 
   return (
