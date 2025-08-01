@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -7,6 +8,7 @@ import { Separator } from "@/components/ui/separator"
 import { ArrowLeft, MapPin, Phone, User, FileText, DollarSign, Clock, Upload, Image as ImageIcon, Video, File, Calendar, Wrench, MessageSquare, Eye } from "lucide-react"
 import { useRouter } from "next/navigation"
 import type { Order } from "@/app/types"
+import FileViewerModal from "./FileViewerModal"
 
 interface OrderDetailProps {
   order: Order
@@ -14,6 +16,8 @@ interface OrderDetailProps {
 
 export default function OrderDetail({ order }: OrderDetailProps) {
   const router = useRouter()
+  const [isFileViewerOpen, setIsFileViewerOpen] = useState(false)
+  const [selectedFileIndex, setSelectedFileIndex] = useState(0)
   const getStatusBadge = (status: Order["status"]) => {
     switch (status) {
       case "pending":
@@ -36,6 +40,11 @@ export default function OrderDetail({ order }: OrderDetailProps) {
       default:
         return <File className="w-4 h-4 text-orange-500" />
     }
+  }
+
+  const handleFileClick = (index: number) => {
+    setSelectedFileIndex(index)
+    setIsFileViewerOpen(true)
   }
 
   return (
@@ -173,11 +182,9 @@ export default function OrderDetail({ order }: OrderDetailProps) {
                   <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
                     {order.uploadedFiles.map((file, index) => (
                       <div key={index} className="group">
-                        <a
-                          href={file.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="block relative focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-lg"
+                        <button
+                          onClick={() => handleFileClick(index)}
+                          className="block relative focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-lg w-full"
                         >
                           <div className="aspect-square bg-gray-50 rounded-lg overflow-hidden border border-gray-200 group-hover:border-blue-300 group-hover:shadow-lg transition-all duration-200 relative">
                             {file.type === "image" ? (
@@ -195,7 +202,7 @@ export default function OrderDetail({ order }: OrderDetailProps) {
                               <Eye className="w-4 h-4 text-white" />
                             </div>
                           </div>
-                        </a>
+                        </button>
                         <p className="mt-1 text-xs text-gray-600 truncate text-center">{file.name}</p>
                       </div>
                     ))}
@@ -277,6 +284,16 @@ export default function OrderDetail({ order }: OrderDetailProps) {
         </div>
         </div>
       </div>
+
+      {/* File Viewer Modal */}
+      {order.uploadedFiles && order.uploadedFiles.length > 0 && (
+        <FileViewerModal
+          isOpen={isFileViewerOpen}
+          onClose={() => setIsFileViewerOpen(false)}
+          files={order.uploadedFiles}
+          initialIndex={selectedFileIndex}
+        />
+      )}
     </div>
   )
 } 
