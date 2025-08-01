@@ -30,13 +30,13 @@ export default function OrderDetail({ order }: OrderDetailProps) {
   const getStatusBadge = (status: Order["status"]) => {
     switch (status) {
       case "pending":
-        return <Badge className="bg-yellow-50 text-yellow-700 border-yellow-200">⏳ Pending</Badge>
+        return <Badge className="bg-yellow-50 text-yellow-700 border-yellow-200">Pending</Badge>
       case "in-progress":
-        return <Badge className="bg-blue-50 text-blue-700 border-blue-200">🔄 In Progress</Badge>
+        return <Badge className="bg-blue-50 text-blue-700 border-blue-200">In Progress</Badge>
       case "completed":
-        return <Badge className="bg-green-50 text-green-700 border-green-200">✅ Completed</Badge>
+        return <Badge className="bg-green-50 text-green-700 border-green-200">Completed</Badge>
       case "rework-required":
-        return <Badge className="bg-orange-50 text-orange-700 border-orange-200">⚠️ Rework Required</Badge>
+        return <Badge className="bg-orange-50 text-orange-700 border-orange-200">Rework Required</Badge>
       default:
         return <Badge className="bg-gray-50 text-gray-700 border-gray-200">{status}</Badge>
     }
@@ -108,7 +108,7 @@ export default function OrderDetail({ order }: OrderDetailProps) {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Compact Header */}
-      <div className="bg-white border-b border-gray-200 px-4 py-3 mb-6">
+      <div className="bg-white border border-gray-200 rounded-lg px-4 py-3 mb-6 shadow-sm">
           <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
               <Button 
@@ -121,11 +121,11 @@ export default function OrderDetail({ order }: OrderDetailProps) {
               </Button>
               <div>
               <h1 className="text-lg font-bold text-gray-900">Order #{order.id}</h1>
-              <p className="text-xs text-gray-500">{order.customerName} • {order.serviceType}</p>
+              {getStatusBadge(order.status)}
               </div>
             </div>
             <div className="flex items-center gap-3">
-              {getStatusBadge(order.status)}
+              
               <div className="text-right">
               <p className="text-xs text-gray-500">Total</p>
               <p className="text-lg font-bold text-green-600">

@@ -2,13 +2,33 @@
 
 import OrdersList from "../../components/admin/OrdersList"
 import { useState, useEffect, useMemo } from "react"
-import { ordersService } from "@/lib/firebase-services"
-import type { Order } from "../../types"
+import { ordersService, techniciansService } from "@/lib/firebase-services"
+import type { Order, Technician } from "../../types"
+
+// Service types from CreateOrderForm
+const SERVICE_TYPES = [
+  "Cleaning",
+  "Repair", 
+  "Installation"
+]
+
+// Statuses from the Order interface
+const ORDER_STATUSES = [
+  "pending",
+  "in-progress", 
+  "completed",
+  "assigned",
+  "rework-required"
+] as const
 
 export default function AllOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([])
+  const [technicians, setTechnicians] = useState<Technician[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
+  const [selectedTechnician, setSelectedTechnician] = useState<string>("all")
+  const [selectedServiceType, setSelectedServiceType] = useState<string>("all")
+  const [selectedStatus, setSelectedStatus] = useState<string>("all")
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage] = useState(10)
 
@@ -26,8 +46,12 @@ export default function AllOrdersPage() {
   const loadData = async () => {
     try {
       setIsLoading(true)
-      const ordersData = await ordersService.getAll()
+      const [ordersData, techniciansData] = await Promise.all([
+        ordersService.getAll(),
+        techniciansService.getAll()
+      ])
       setOrders(ordersData)
+      setTechnicians(techniciansData)
     } catch (error) {
       console.error("Error loading data:", error)
     } finally {
@@ -35,22 +59,48 @@ export default function AllOrdersPage() {
     }
   }
 
-  // Filter orders based on search term
+  // Filter orders based on search term and dropdown filters
   const filteredOrders = useMemo(() => {
-    if (!searchTerm.trim()) return orders
+    let filtered = orders
 
-    const searchLower = searchTerm.toLowerCase()
-    return orders.filter((order) => {
-      return (
-        order.customerName.toLowerCase().includes(searchLower) ||
-        order.phone.toLowerCase().includes(searchLower) ||
-        order.serviceType.toLowerCase().includes(searchLower) ||
-        order.assignedTechnician.toLowerCase().includes(searchLower) ||
-        order.id.toLowerCase().includes(searchLower) ||
-        order.status.toLowerCase().includes(searchLower)
+    // Text search filter
+    if (searchTerm.trim()) {
+      const searchLower = searchTerm.toLowerCase()
+      filtered = filtered.filter((order) => {
+        return (
+          order.customerName.toLowerCase().includes(searchLower) ||
+          order.phone.toLowerCase().includes(searchLower) ||
+          order.serviceType.toLowerCase().includes(searchLower) ||
+          order.assignedTechnician.toLowerCase().includes(searchLower) ||
+          order.id.toLowerCase().includes(searchLower) ||
+          order.status.toLowerCase().includes(searchLower)
+        )
+      })
+    }
+
+    // Technician filter
+    if (selectedTechnician && selectedTechnician !== "all") {
+      filtered = filtered.filter((order) => 
+        order.assignedTechnicianId === selectedTechnician
       )
-    })
-  }, [orders, searchTerm])
+    }
+
+    // Service type filter
+    if (selectedServiceType && selectedServiceType !== "all") {
+      filtered = filtered.filter((order) => 
+        order.serviceType === selectedServiceType
+      )
+    }
+
+    // Status filter
+    if (selectedStatus && selectedStatus !== "all") {
+      filtered = filtered.filter((order) => 
+        order.status === selectedStatus
+      )
+    }
+
+    return filtered
+  }, [orders, searchTerm, selectedTechnician, selectedServiceType, selectedStatus])
 
   // Calculate pagination
   const totalPages = Math.ceil(filteredOrders.length / itemsPerPage)
@@ -58,10 +108,10 @@ export default function AllOrdersPage() {
   const endIndex = startIndex + itemsPerPage
   const currentOrders = filteredOrders.slice(startIndex, endIndex)
 
-  // Reset to first page when search term changes
+  // Reset to first page when any filter changes
   useEffect(() => {
     setCurrentPage(1)
-  }, [searchTerm])
+  }, [searchTerm, selectedTechnician, selectedServiceType, selectedStatus])
 
   if (isLoading) {
     return (
@@ -76,6 +126,15 @@ export default function AllOrdersPage() {
       orders={currentOrders}
       searchTerm={searchTerm}
       onSearchChange={setSearchTerm}
+      technicians={technicians}
+      selectedTechnician={selectedTechnician}
+      onTechnicianChange={setSelectedTechnician}
+      serviceTypes={SERVICE_TYPES}
+      selectedServiceType={selectedServiceType}
+      onServiceTypeChange={setSelectedServiceType}
+      statuses={ORDER_STATUSES}
+      selectedStatus={selectedStatus}
+      onStatusChange={setSelectedStatus}
       currentPage={currentPage}
       totalPages={totalPages}
       totalItems={filteredOrders.length}
