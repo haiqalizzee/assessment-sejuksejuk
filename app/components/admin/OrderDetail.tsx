@@ -5,10 +5,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
-import { ArrowLeft, MapPin, Phone, User, FileText, DollarSign, Clock, Upload, Image as ImageIcon, Video, File, Calendar, Wrench, MessageSquare, Eye } from "lucide-react"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Textarea } from "@/components/ui/textarea"
+import { Label } from "@/components/ui/label"
+import { ArrowLeft, MapPin, Phone, User, FileText, DollarSign, Clock, Upload, Image as ImageIcon, Video, File, Calendar, Wrench, MessageSquare, Eye, AlertTriangle, RotateCcw } from "lucide-react"
 import { useRouter } from "next/navigation"
 import type { Order } from "@/app/types"
+import { ordersService } from "@/lib/firebase-services"
 import FileViewerModal from "./FileViewerModal"
+import { toast } from "@/hooks/use-toast"
 
 interface OrderDetailProps {
   order: Order
@@ -18,6 +23,10 @@ export default function OrderDetail({ order }: OrderDetailProps) {
   const router = useRouter()
   const [isFileViewerOpen, setIsFileViewerOpen] = useState(false)
   const [selectedFileIndex, setSelectedFileIndex] = useState(0)
+  const [isReworkDialogOpen, setIsReworkDialogOpen] = useState(false)
+  const [reworkReason, setReworkReason] = useState("")
+  const [isUpdating, setIsUpdating] = useState(false)
+
   const getStatusBadge = (status: Order["status"]) => {
     switch (status) {
       case "pending":
@@ -26,8 +35,57 @@ export default function OrderDetail({ order }: OrderDetailProps) {
         return <Badge className="bg-blue-50 text-blue-700 border-blue-200">🔄 In Progress</Badge>
       case "completed":
         return <Badge className="bg-green-50 text-green-700 border-green-200">✅ Completed</Badge>
+      case "rework-required":
+        return <Badge className="bg-orange-50 text-orange-700 border-orange-200">⚠️ Rework Required</Badge>
       default:
         return <Badge className="bg-gray-50 text-gray-700 border-gray-200">{status}</Badge>
+    }
+  }
+
+  const handleMarkForRework = async () => {
+    if (!reworkReason.trim()) {
+      toast({
+        title: "Error",
+        description: "Please provide a reason for rework.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    setIsUpdating(true)
+    try {
+      const reworkEntry = {
+        date: new Date().toISOString(),
+        reason: reworkReason,
+        adminNotes: reworkReason,
+      }
+
+      const updates = {
+        status: "rework-required" as const,
+        reworkHistory: [...(order.reworkHistory || []), reworkEntry],
+        reworkCount: (order.reworkCount || 0) + 1,
+        originalCompletedAt: order.completedAt,
+      }
+
+      await ordersService.update(order.id, updates)
+      
+      toast({
+        title: "Success",
+        description: "Order marked for rework. Technician will be notified.",
+      })
+      
+      setIsReworkDialogOpen(false)
+      setReworkReason("")
+      router.refresh()
+    } catch (error) {
+      console.error("Error marking for rework:", error)
+      toast({
+        title: "Error",
+        description: "Failed to mark order for rework.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsUpdating(false)
     }
   }
 
@@ -165,6 +223,81 @@ export default function OrderDetail({ order }: OrderDetailProps) {
                     <Clock className="w-3 h-3" />
                     Completed on {new Date(order.completedAt || "").toLocaleDateString()} at {new Date(order.completedAt || "").toLocaleTimeString()}
                   </div>
+                  <div className="pt-3 border-t border-gray-200">
+                    <Dialog open={isReworkDialogOpen} onOpenChange={setIsReworkDialogOpen}>
+                      <DialogTrigger asChild>
+                        <Button variant="outline" size="sm" className="w-full">
+                          <AlertTriangle className="w-4 h-4 mr-2" />
+                          Mark for Rework
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Mark Order for Rework</DialogTitle>
+                        </DialogHeader>
+                        <div className="space-y-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="rework-reason">Reason for Rework</Label>
+                            <Textarea
+                              id="rework-reason"
+                              placeholder="Describe why this job needs rework..."
+                              value={reworkReason}
+                              onChange={(e) => setReworkReason(e.target.value)}
+                              rows={4}
+                            />
+                          </div>
+                          <div className="flex gap-2 justify-end">
+                            <Button
+                              variant="outline"
+                              onClick={() => {
+                                setIsReworkDialogOpen(false)
+                                setReworkReason("")
+                              }}
+                            >
+                              Cancel
+                            </Button>
+                            <Button
+                              onClick={handleMarkForRework}
+                              disabled={isUpdating || !reworkReason.trim()}
+                            >
+                              {isUpdating ? "Marking..." : "Mark for Rework"}
+                            </Button>
+                          </div>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Rework Information */}
+            {order.status === "rework-required" && (
+              <Card className="border-0 shadow-sm">
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <RotateCcw className="w-4 h-4 text-orange-600" />
+                    Rework Required
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {order.reworkHistory && order.reworkHistory.length > 0 && (
+                    <div className="space-y-2">
+                      <label className="text-xs font-medium text-gray-500">Latest Rework Reason</label>
+                      <p className="text-sm text-gray-700 leading-relaxed">
+                        {order.reworkHistory[order.reworkHistory.length - 1].reason}
+                      </p>
+                      <div className="flex items-center gap-2 text-xs text-gray-500">
+                        <Clock className="w-3 h-3" />
+                        Marked on {new Date(order.reworkHistory[order.reworkHistory.length - 1].date).toLocaleDateString()}
+                      </div>
+                    </div>
+                  )}
+                  {order.reworkCount && order.reworkCount > 1 && (
+                    <div className="text-xs text-orange-600">
+                      This is the {order.reworkCount}nd rework for this order
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             )}
@@ -277,6 +410,18 @@ export default function OrderDetail({ order }: OrderDetailProps) {
                         <p className="text-xs text-gray-500">{new Date(order.completedAt).toLocaleDateString()} at {new Date(order.completedAt).toLocaleTimeString()}</p>
                       </div>
                     </div>
+                  )}
+                  {order.reworkHistory && order.reworkHistory.length > 0 && (
+                    order.reworkHistory.map((rework, index) => (
+                      <div key={index} className="flex items-start gap-2">
+                        <div className="w-2 h-2 bg-orange-500 rounded-full mt-1.5"></div>
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-gray-900">Marked for Rework</p>
+                          <p className="text-xs text-gray-500">{new Date(rework.date).toLocaleDateString()} at {new Date(rework.date).toLocaleTimeString()}</p>
+                          <p className="text-xs text-orange-600 mt-1">{rework.reason}</p>
+                        </div>
+                      </div>
+                    ))
                   )}
                 </div>
               </CardContent>

@@ -69,7 +69,12 @@ export function TechnicianProvider({ children }: { children: React.ReactNode }) 
       let allJobs = await ordersService.getByTechnician(id!)
       console.log("All jobs found for technician:", allJobs)
       
-      const assignedJobs = allJobs.filter((job) => job.status === "pending" || job.status === "assigned" || job.status === "in-progress")
+      const assignedJobs = allJobs.filter((job) => 
+        job.status === "pending" || 
+        job.status === "assigned" || 
+        job.status === "in-progress" ||
+        job.status === "rework-required"
+      )
       const completedJobs = allJobs.filter((job) => job.status === "completed")
       
       console.log("Assigned jobs:", assignedJobs)

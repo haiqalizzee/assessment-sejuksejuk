@@ -526,6 +526,10 @@ export const kpiService = {
           if (order.status === "completed") {
             kpi.jobsDone += 1
             kpi.totalAmount += order.finalAmount || order.quotedPrice
+            // Count reworks based on reworkCount field
+            if (order.reworkCount && order.reworkCount > 0) {
+              kpi.reworks += order.reworkCount
+            }
           }
         }
       })
@@ -592,10 +596,9 @@ export const kpiService = {
         totalRevenue: currentWeekOrders.reduce((sum, order) => 
           sum + (order.finalAmount || order.quotedPrice), 0
         ),
-        totalReworks: currentWeekOrders.filter(order => 
-          order.remarks?.toLowerCase().includes('rework') || 
-          order.workDone?.toLowerCase().includes('rework')
-        ).length
+        totalReworks: currentWeekOrders.reduce((sum, order) => 
+          sum + (order.reworkCount || 0), 0
+        )
       }
 
       // Calculate previous week metrics
@@ -609,10 +612,9 @@ export const kpiService = {
         totalRevenue: previousWeekOrders.reduce((sum, order) => 
           sum + (order.finalAmount || order.quotedPrice), 0
         ),
-        totalReworks: previousWeekOrders.filter(order => 
-          order.remarks?.toLowerCase().includes('rework') || 
-          order.workDone?.toLowerCase().includes('rework')
-        ).length
+        totalReworks: previousWeekOrders.reduce((sum, order) => 
+          sum + (order.reworkCount || 0), 0
+        )
       }
 
       // Calculate percentage changes

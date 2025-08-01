@@ -9,7 +9,7 @@ export interface Order {
   assignedTechnicianId: string  // New field for technician ID
   assignedTechnician: string    // Keep name for display
   adminNotes: string
-  status: "pending" | "in-progress" | "completed" | "assigned"
+  status: "pending" | "in-progress" | "completed" | "assigned" | "rework-required"
   createdAt: string
   assignedAt?: string
   // Job completion fields
@@ -19,6 +19,15 @@ export interface Order {
   remarks?: string
   completedAt?: string
   uploadedFiles?: Array<{ url: string; name: string; type: string }>
+  // Rework tracking fields
+  reworkHistory?: Array<{
+    date: string
+    reason: string
+    adminNotes: string
+    technicianNotes?: string
+  }>
+  reworkCount?: number
+  originalCompletedAt?: string
 }
 
 export interface TechnicianKPI {

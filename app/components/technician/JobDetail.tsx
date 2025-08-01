@@ -137,8 +137,11 @@ export default function JobDetail({ job, onBack, onJobComplete }: JobDetailProps
         uploadedFiles: uploadedFileUrls,
       }
 
+      // Check if this is a rework job
+      const isRework = job.status === "rework-required"
+      
       // Update the order in Firestore with completion data
-      await ordersService.update(job.id, {
+      const updateData: any = {
         status: "completed",
         workDone: jobFormData.workDone,
         extraCharges: Number.parseFloat(jobFormData.extraCharges || "0"),
@@ -146,12 +149,27 @@ export default function JobDetail({ job, onBack, onJobComplete }: JobDetailProps
         remarks: jobFormData.remarks,
         uploadedFiles: uploadedFileUrls,
         completedAt: new Date().toISOString(),
-      })
+      }
 
-      const whatsappMessage = `Hi ${job.customerName}, job ${job.id} has been completed by Technician Ali at ${new Date().toLocaleString()}. 
+      // If this is a rework job, add technician notes to the latest rework entry
+      if (isRework && job.reworkHistory && job.reworkHistory.length > 0) {
+        const latestReworkIndex = job.reworkHistory.length - 1
+        const updatedReworkHistory = [...job.reworkHistory]
+        updatedReworkHistory[latestReworkIndex] = {
+          ...updatedReworkHistory[latestReworkIndex],
+          technicianNotes: jobFormData.remarks || "Rework completed"
+        }
+        updateData.reworkHistory = updatedReworkHistory
+      }
+
+      await ordersService.update(job.id, updateData)
+
+      const reworkText = isRework ? "\n\n⚠️ This was a rework job to address previous issues." : ""
+      
+      const whatsappMessage = `Hi ${job.customerName}, job ${job.id} has been ${isRework ? "reworked and completed" : "completed"} by Technician Ali at ${new Date().toLocaleString()}. 
 
 Final Amount: RM ${finalAmount.toFixed(2)}
-${jobFormData.extraCharges && Number.parseFloat(jobFormData.extraCharges) > 0 ? `Extra Charges: RM ${Number.parseFloat(jobFormData.extraCharges).toFixed(2)}` : ''}
+${jobFormData.extraCharges && Number.parseFloat(jobFormData.extraCharges) > 0 ? `Extra Charges: RM ${Number.parseFloat(jobFormData.extraCharges).toFixed(2)}` : ''}${reworkText}
 
 Please check and leave feedback. Thank you!
 
@@ -174,8 +192,8 @@ Please check and leave feedback. Thank you!
       const whatsappUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(whatsappMessage)}`
 
       toast({
-        title: "Job Completed Successfully!",
-        description: `Job ${job.id} has been marked as complete. Files uploaded and customer notification sent.`,
+        title: isRework ? "Rework Completed Successfully!" : "Job Completed Successfully!",
+        description: `Job ${job.id} has been ${isRework ? "reworked and marked as complete" : "marked as complete"}. Files uploaded and customer notification sent.`,
       })
 
       // Open WhatsApp notification immediately
@@ -231,8 +249,22 @@ Please check and leave feedback. Thank you!
           Back
         </Button>
         <div>
-          <h2 className="text-xl sm:text-2xl font-bold text-blue-900">Complete Job</h2>
-          <p className="text-sm sm:text-base text-blue-600">Update job details and mark as complete</p>
+          <h2 className="text-xl sm:text-2xl font-bold text-blue-900">
+            {job.status === "rework-required" ? "Complete Rework" : "Complete Job"}
+          </h2>
+          <p className="text-sm sm:text-base text-blue-600">
+            {job.status === "rework-required" 
+              ? "Address the rework requirements and mark as complete" 
+              : "Update job details and mark as complete"
+            }
+          </p>
+          {job.status === "rework-required" && job.reworkHistory && job.reworkHistory.length > 0 && (
+            <div className="mt-2 p-2 bg-orange-50 border border-orange-200 rounded-md">
+              <p className="text-xs text-orange-700">
+                <strong>Rework Reason:</strong> {job.reworkHistory[job.reworkHistory.length - 1].reason}
+              </p>
+            </div>
+          )}
         </div>
       </div>
 
