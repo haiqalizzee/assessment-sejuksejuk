@@ -8,6 +8,8 @@ import {
   signOut,
   onAuthStateChanged,
   createUserWithEmailAndPassword,
+  setPersistence,
+  browserLocalPersistence,
 } from "firebase/auth"
 import { getFirebaseAuth } from "@/lib/firebase-services"
 import { isConfigValid } from "@/lib/firebase"
@@ -52,8 +54,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         const auth = getFirebaseAuth()
 
+        // Set persistence to keep user logged in across sessions
+        try {
+          await setPersistence(auth, browserLocalPersistence)
+        } catch (persistenceError) {
+          console.warn("Could not set auth persistence:", persistenceError)
+        }
+
         unsubscribe = onAuthStateChanged(auth, async (user) => {
           setUser(user)
+          
+          if (user && user.email) {
+            // Create profile based on email pattern
+            const profile = {
+              email: user.email,
+              role: user.email.startsWith("admin") ? "admin" : "technician",
+              name: user.email.split("@")[0] || "User"
+            }
+            setUserProfile(profile)
+          } else {
+            setUserProfile(null)
+          }
+          
           setLoading(false)
         })
       } catch (error) {
