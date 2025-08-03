@@ -244,12 +244,12 @@ Please check and leave feedback. Thank you!
         description: `Job ${job.id} has been ${isRework ? "reworked and marked as complete" : "marked as complete"}. Files uploaded and customer notification sent.`,
       })
 
-      // Force redirect to WhatsApp
-      console.log("Redirecting to WhatsApp with URL:", whatsappUrl)
+      // Open WhatsApp in new tab
+      console.log("Opening WhatsApp in new tab with URL:", whatsappUrl)
       console.log("Phone number:", job.phone, "Cleaned:", cleanPhone)
       
-      // Force redirect to WhatsApp
-      window.location.href = whatsappUrl
+      // Open WhatsApp in new tab
+      window.open(whatsappUrl, '_blank')
 
       onJobComplete(completionData)
     } catch (error) {
