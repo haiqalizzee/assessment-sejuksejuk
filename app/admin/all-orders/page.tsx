@@ -4,6 +4,7 @@ import OrdersList from "../../components/admin/OrdersList"
 import { useState, useEffect, useMemo } from "react"
 import { ordersService, techniciansService } from "@/lib/firebase-services"
 import type { Order, Technician } from "../../types"
+import { usePageTitle } from "@/hooks/use-page-title"
 
 // Service types from CreateOrderForm
 const SERVICE_TYPES = [
@@ -22,6 +23,7 @@ const ORDER_STATUSES = [
 ] as const
 
 export default function AllOrdersPage() {
+  usePageTitle("All Orders")
   const [orders, setOrders] = useState<Order[]>([])
   const [technicians, setTechnicians] = useState<Technician[]>([])
   const [isLoading, setIsLoading] = useState(true)

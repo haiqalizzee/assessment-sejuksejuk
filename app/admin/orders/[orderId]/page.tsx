@@ -5,8 +5,10 @@ import { useParams } from "next/navigation"
 import OrderDetail from "../../../components/admin/OrderDetail"
 import { ordersService } from "@/lib/firebase-services"
 import type { Order } from "../../../types"
+import { usePageTitle } from "@/hooks/use-page-title"
 
 export default function OrderDetailPage() {
+  usePageTitle("Order Details")
   const params = useParams()
   const orderId = params.orderId as string
   const [order, setOrder] = useState<Order | null>(null)

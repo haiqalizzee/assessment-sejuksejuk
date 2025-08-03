@@ -6,8 +6,10 @@ import JobDetail from "../../../components/technician/JobDetail"
 import { useTechnician } from "../../../contexts/TechnicianContext"
 import { ordersService } from "@/lib/firebase-services"
 import type { Order } from "@/app/types"
+import { usePageTitle } from "@/hooks/use-page-title"
 
 export default function JobDetailPage() {
+  usePageTitle("Job Details")
   const params = useParams()
   const router = useRouter()
   const { handleJobComplete } = useTechnician()

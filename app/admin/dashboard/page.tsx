@@ -4,8 +4,10 @@ import AdminDashboard from "../../components/admin/AdminDashboard"
 import { useState, useEffect } from "react"
 import { ordersService } from "@/lib/firebase-services"
 import type { Order } from "../../types"
+import { usePageTitle } from "@/hooks/use-page-title"
 
 export default function DashboardPage() {
+  usePageTitle("Dashboard")
   const [orders, setOrders] = useState<Order[]>([])
   const [isLoading, setIsLoading] = useState(true)
 

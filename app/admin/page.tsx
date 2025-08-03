@@ -2,8 +2,10 @@
 
 import { useEffect } from "react"
 import { useRouter } from "next/navigation"
+import { usePageTitle } from "@/hooks/use-page-title"
 
 export default function AdminDefaultPage() {
+  usePageTitle("Dashboard")
   const router = useRouter()
 
   useEffect(() => {

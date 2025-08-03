@@ -2,8 +2,10 @@
 
 import CompletedJobs from "../../components/technician/CompletedJobs"
 import { useTechnician } from "../../contexts/TechnicianContext"
+import { usePageTitle } from "@/hooks/use-page-title"
 
 export default function CompletedJobsPage() {
+  usePageTitle("Completed Jobs")
   const { completedJobs, technician } = useTechnician()
 
   return (
