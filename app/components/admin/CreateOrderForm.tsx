@@ -22,6 +22,13 @@ import { ordersService, techniciansService } from "@/lib/firebase-services"
 import type { Order, Technician } from "@/app/types"
 import { DatePicker } from "@/components/ui/datepicker"
 import { toLocalDateString, toLocalDateTimeString } from "@/lib/utils"
+import {
+  getStates,
+  getCities,
+  getPostcodes,
+  getPostcodesByPrefix,
+  findPostcode
+} from "malaysia-postcodes"
 
 interface CreateOrderFormProps {
   onOrderCreate: (order: Order) => void
@@ -33,10 +40,21 @@ export default function CreateOrderForm({ onOrderCreate, onOrderComplete }: Crea
   const [isLoading, setIsLoading] = useState(false)
   const [showOrderSummary, setShowOrderSummary] = useState(false)
   const [createdOrder, setCreatedOrder] = useState<Order | null>(null)
+  
+  // Address-related state
+  const [states, setStates] = useState<string[]>([])
+  const [cities, setCities] = useState<string[]>([])
+  const [postcodes, setPostcodes] = useState<string[]>([])
+  const [filteredCities, setFilteredCities] = useState<string[]>([])
+  const [filteredPostcodes, setFilteredPostcodes] = useState<string[]>([])
+  
   const [formData, setFormData] = useState({
     customerName: "",
     phone: "",
     address: "",
+    city: "",
+    postcode: "",
+    state: "",
     problemDescription: "",
     serviceType: "",
     quotedPrice: "",
@@ -48,6 +66,7 @@ export default function CreateOrderForm({ onOrderCreate, onOrderComplete }: Crea
 
   useEffect(() => {
     loadTechnicians()
+    loadStates()
   }, [])
 
   const loadTechnicians = async () => {
@@ -65,8 +84,99 @@ export default function CreateOrderForm({ onOrderCreate, onOrderComplete }: Crea
     }
   }
 
+  const loadStates = () => {
+    try {
+      const statesList = getStates()
+      setStates(statesList)
+    } catch (error) {
+      console.error("Error loading states:", error)
+    }
+  }
+
+  const loadCities = (state: string) => {
+    try {
+      const citiesList = getCities(state)
+      setCities(citiesList)
+      setFilteredCities(citiesList)
+    } catch (error) {
+      console.error("Error loading cities:", error)
+      setCities([])
+      setFilteredCities([])
+    }
+  }
+
+  const loadPostcodes = (city: string) => {
+    try {
+      const postcodesList = getPostcodes(formData.state, city)
+      setPostcodes(postcodesList)
+      setFilteredPostcodes(postcodesList)
+    } catch (error) {
+      console.error("Error loading postcodes:", error)
+      setPostcodes([])
+      setFilteredPostcodes([])
+    }
+  }
+
   const handleInputChange = (field: string, value: string | Date) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
+  }
+
+  const handleStateChange = (state: string) => {
+    setFormData(prev => ({
+      ...prev,
+      state,
+      city: "",
+      postcode: "",
+      address: ""
+    }))
+    loadCities(state)
+  }
+
+  const handleCityChange = (city: string) => {
+    setFormData(prev => ({
+      ...prev,
+      city,
+      postcode: "",
+      address: ""
+    }))
+    loadPostcodes(city)
+  }
+
+  const handlePostcodeChange = (postcode: string) => {
+    setFormData(prev => ({
+      ...prev,
+      postcode,
+      address: ""
+    }))
+  }
+
+  const handleAddressChange = (address: string) => {
+    setFormData(prev => ({
+      ...prev,
+      address
+    }))
+  }
+
+  const handleCitySearch = (searchTerm: string) => {
+    if (!searchTerm) {
+      setFilteredCities(cities)
+      return
+    }
+    const filtered = cities.filter(city => 
+      city.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+    setFilteredCities(filtered)
+  }
+
+  const handlePostcodeSearch = (searchTerm: string) => {
+    if (!searchTerm) {
+      setFilteredPostcodes(postcodes)
+      return
+    }
+    const filtered = postcodes.filter(postcode => 
+      postcode.includes(searchTerm)
+    )
+    setFilteredPostcodes(filtered)
   }
 
   const handleTechnicianSelect = (technicianId: string) => {
@@ -94,6 +204,18 @@ export default function CreateOrderForm({ onOrderCreate, onOrderComplete }: Crea
   const generateOrderId = () => {
     const randomNum = Math.floor(1000 + Math.random() * 9000) // 4-digit random number
     return `ORDER${randomNum}`
+  }
+
+  // Combine address fields into one string
+  const combineAddress = () => {
+    const parts = [
+      formData.address,
+      formData.city,
+      formData.postcode,
+      formData.state
+    ].filter(part => part && part.trim() !== "")
+    
+    return parts.join(", ")
   }
 
   // Send WhatsApp message
@@ -153,8 +275,12 @@ Please contact the customer and update the order status.`
       console.log("Selected technician ID:", formData.assignedTechnicianId)
       console.log("Selected technician name:", formData.assignedTechnician)
       
+      // Combine address fields
+      const combinedAddress = combineAddress()
+      
       const newOrderData = {
         ...formData,
+        address: combinedAddress, // Use combined address
         quotedPrice: Number.parseFloat(formData.quotedPrice),
         status: "pending" as const,
         createdAt: toLocalDateTimeString(new Date()),
@@ -195,6 +321,9 @@ Please contact the customer and update the order status.`
         customerName: "",
         phone: "",
         address: "",
+        city: "",
+        postcode: "",
+        state: "",
         problemDescription: "",
         serviceType: "",
         quotedPrice: "",
@@ -334,19 +463,114 @@ Please contact the customer and update the order status.`
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="address" className="flex items-center gap-2 text-sm lg:text-base">
+            {/* Address Section */}
+            <div className="space-y-4">
+              <Label className="flex items-center gap-2 text-sm lg:text-base font-semibold">
                 <MapPin className="w-4 h-4" />
                 Customer Address *
               </Label>
-              <Textarea
-                id="address"
-                value={formData.address}
-                onChange={(e) => handleInputChange("address", e.target.value)}
-                placeholder="Enter complete address with postcode and state"
-                required
-                className="min-h-[60px] lg:min-h-[80px] transition-all duration-200 focus:ring-2 focus:ring-blue-500 text-sm lg:text-base"
-              />
+              
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="state" className="text-sm">
+                    State *
+                  </Label>
+                  <Select value={formData.state} onValueChange={handleStateChange}>
+                    <SelectTrigger className="transition-all duration-200 focus:ring-2 focus:ring-blue-500 text-sm">
+                      <SelectValue placeholder="Select state" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {states.map((state) => (
+                        <SelectItem key={state} value={state}>
+                          {state}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="city" className="text-sm">
+                    City *
+                  </Label>
+                  <Select 
+                    value={formData.city} 
+                    onValueChange={handleCityChange}
+                    disabled={!formData.state}
+                  >
+                    <SelectTrigger className="transition-all duration-200 focus:ring-2 focus:ring-blue-500 text-sm">
+                      <SelectValue placeholder={formData.state ? "Select city" : "Select state first"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <div className="p-2">
+                        <Input
+                          placeholder="Search cities..."
+                          onChange={(e) => handleCitySearch(e.target.value)}
+                          className="mb-2"
+                        />
+                      </div>
+                      {filteredCities.map((city) => (
+                        <SelectItem key={city} value={city}>
+                          {city}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="postcode" className="text-sm">
+                    Postcode *
+                  </Label>
+                  <Select 
+                    value={formData.postcode} 
+                    onValueChange={handlePostcodeChange}
+                    disabled={!formData.city}
+                  >
+                    <SelectTrigger className="transition-all duration-200 focus:ring-2 focus:ring-blue-500 text-sm">
+                      <SelectValue placeholder={formData.city ? "Select postcode" : "Select city first"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <div className="p-2">
+                        <Input
+                          placeholder="Search postcodes..."
+                          onChange={(e) => handlePostcodeSearch(e.target.value)}
+                          className="mb-2"
+                        />
+                      </div>
+                      {filteredPostcodes.map((postcode) => (
+                        <SelectItem key={postcode} value={postcode}>
+                          {postcode}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="address" className="text-sm">
+                    Street Address *
+                  </Label>
+                  <Input
+                    id="address"
+                    value={formData.address}
+                    onChange={(e) => handleAddressChange(e.target.value)}
+                    placeholder="Enter street address"
+                    required
+                    className="transition-all duration-200 focus:ring-2 focus:ring-blue-500 text-sm"
+                  />
+                </div>
+              </div>
+
+              {/* Combined Address Preview */}
+              {formData.address && formData.city && formData.postcode && formData.state && (
+                <div className="bg-blue-50 p-3 rounded-lg">
+                  <Label className="text-sm font-medium text-blue-900">Complete Address:</Label>
+                  <p className="text-sm text-blue-700 mt-1">
+                    {combineAddress()}
+                  </p>
+                </div>
+              )}
             </div>
 
             <div className="space-y-2">
