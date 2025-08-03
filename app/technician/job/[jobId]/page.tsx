@@ -3,6 +3,7 @@
 import { useParams, useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import JobDetail from "../../../components/technician/JobDetail"
+import CompletedJobDetail from "../../../components/technician/CompletedJobDetail"
 import { useTechnician } from "../../../contexts/TechnicianContext"
 import { ordersService } from "@/lib/firebase-services"
 import type { Order } from "@/app/types"
@@ -37,7 +38,12 @@ export default function JobDetailPage() {
   }
 
   const handleBack = () => {
-    router.push("/technician/assigned-jobs")
+    // Check if the job is completed to determine the correct back route
+    if (job?.status === "completed") {
+      router.push("/technician/completed-jobs")
+    } else {
+      router.push("/technician/assigned-jobs")
+    }
   }
 
   const handleComplete = async (completionData: {
@@ -67,6 +73,17 @@ export default function JobDetailPage() {
     )
   }
 
+  // If job is completed, show read-only view
+  if (job.status === "completed") {
+    return (
+      <CompletedJobDetail
+        job={job}
+        onBack={handleBack}
+      />
+    )
+  }
+
+  // Otherwise show the completion form
   return (
     <JobDetail
       job={job}

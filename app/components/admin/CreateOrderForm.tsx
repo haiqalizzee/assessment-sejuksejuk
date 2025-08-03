@@ -17,15 +17,18 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { toast } from "@/hooks/use-toast"
-import { User, Phone, MapPin, Wrench, DollarSign, UserCheck, StickyNote, FileText, MessageCircle, X } from "lucide-react"
+import { User, Phone, MapPin, Wrench, DollarSign, UserCheck, StickyNote, FileText, MessageCircle, X, Calendar } from "lucide-react"
 import { ordersService, techniciansService } from "@/lib/firebase-services"
 import type { Order, Technician } from "@/app/types"
+import { DatePicker } from "@/components/ui/datepicker"
+import { toLocalDateString, toLocalDateTimeString } from "@/lib/utils"
 
 interface CreateOrderFormProps {
   onOrderCreate: (order: Order) => void
+  onOrderComplete?: () => void
 }
 
-export default function CreateOrderForm({ onOrderCreate }: CreateOrderFormProps) {
+export default function CreateOrderForm({ onOrderCreate, onOrderComplete }: CreateOrderFormProps) {
   const [technicians, setTechnicians] = useState<Technician[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [showOrderSummary, setShowOrderSummary] = useState(false)
@@ -39,6 +42,7 @@ export default function CreateOrderForm({ onOrderCreate }: CreateOrderFormProps)
     quotedPrice: "",
     assignedTechnicianId: "",  // New field for ID
     assignedTechnician: "",    // Keep name for display
+    assignedDate: undefined as Date | undefined,   // New field for assigned date - undefined by default
     adminNotes: "",
   })
 
@@ -61,7 +65,7 @@ export default function CreateOrderForm({ onOrderCreate }: CreateOrderFormProps)
     }
   }
 
-  const handleInputChange = (field: string, value: string) => {
+  const handleInputChange = (field: string, value: string | Date) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
   }
 
@@ -104,6 +108,7 @@ export default function CreateOrderForm({ onOrderCreate }: CreateOrderFormProps)
 *Service Type:* ${order.serviceType}
 *Problem:* ${order.problemDescription}
 *Quoted Price:* RM ${order.quotedPrice}
+*Assigned Date:* ${order.assignedAt}
 ${order.adminNotes ? `*Admin Notes:* ${order.adminNotes}` : ''}
 
 Please contact the customer and update the order status.`
@@ -119,6 +124,30 @@ Please contact the customer and update the order status.`
     setIsLoading(true)
 
     try {
+      // Validate assigned date is selected and not in the past
+      if (!formData.assignedDate) {
+        toast({
+          title: "Missing Date",
+          description: "Please select an assigned date for the service.",
+          variant: "destructive",
+        })
+        setIsLoading(false)
+        return
+      }
+
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+      
+      if (formData.assignedDate < today) {
+        toast({
+          title: "Invalid Date",
+          description: "Assigned date cannot be in the past. Please select today or a future date.",
+          variant: "destructive",
+        })
+        setIsLoading(false)
+        return
+      }
+
       const orderId = generateOrderId()
       
       console.log("Selected technician ID:", formData.assignedTechnicianId)
@@ -128,15 +157,15 @@ Please contact the customer and update the order status.`
         ...formData,
         quotedPrice: Number.parseFloat(formData.quotedPrice),
         status: "pending" as const,
-        createdAt: new Date().toISOString().split("T")[0],
+        createdAt: toLocalDateTimeString(new Date()),
+        assignedAt: toLocalDateString(formData.assignedDate), // Convert Date to string preserving local date
       }
       
       console.log("New order data:", newOrderData)
 
-      // Show confirmation dialog using SweetAlert
       const { isConfirmed } = await (window as any).Swal.fire({
         title: 'Confirm Order Creation',
-        text: `Are you sure you want to create order ${orderId}?`,
+        text: `Are you sure you want to create order`,
         icon: 'question',
         showCancelButton: true,
         confirmButtonColor: '#3085d6',
@@ -160,7 +189,7 @@ Please contact the customer and update the order status.`
 
       setCreatedOrder(newOrder)
       setShowOrderSummary(true)
-      onOrderCreate(newOrder)
+      // Don't call onOrderCreate here - wait for user to close summary
 
       setFormData({
         customerName: "",
@@ -171,6 +200,7 @@ Please contact the customer and update the order status.`
         quotedPrice: "",
         assignedTechnicianId: "",
         assignedTechnician: "",
+        assignedDate: undefined,
         adminNotes: "",
       })
 
@@ -265,7 +295,7 @@ Please contact the customer and update the order status.`
                 />
               </div>
 
-              <div className="space-y-2 lg:col-span-2">
+              <div className="space-y-2">
                 <Label htmlFor="assignedTechnician" className="flex items-center gap-2 text-sm lg:text-base">
                   <UserCheck className="w-4 h-4" />
                   Assigned Technician *
@@ -285,6 +315,22 @@ Please contact the customer and update the order status.`
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="assignedDate" className="flex items-center gap-2 text-sm lg:text-base">
+                  <Calendar className="w-4 h-4" />
+                  Assigned Date *
+                </Label>
+                <DatePicker
+                  date={formData.assignedDate}
+                  onDateChange={(date) => {
+                    setFormData(prev => ({ ...prev, assignedDate: date }))
+                  }}
+                  placeholder="Select assigned date"
+                  minDate={new Date()}
+                  className="transition-all duration-200 focus:ring-2 focus:ring-blue-500 text-sm lg:text-base"
+                />
               </div>
             </div>
 
@@ -344,7 +390,7 @@ Please contact the customer and update the order status.`
       </Card>
 
       {/* Order Summary Modal */}
-      <Dialog open={showOrderSummary} onOpenChange={setShowOrderSummary}>
+      <Dialog open={showOrderSummary} onOpenChange={() => {}}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -385,6 +431,10 @@ Please contact the customer and update the order status.`
                     <span className="font-medium">Technician:</span>
                     <span className="text-green-600">{createdOrder.assignedTechnician}</span>
                   </div>
+                  <div className="flex justify-between">
+                    <span className="font-medium">Assigned Date:</span>
+                    <span>{createdOrder.assignedAt}</span>
+                  </div>
                 </div>
               </div>
 
@@ -410,6 +460,8 @@ Please contact the customer and update the order status.`
                   onClick={() => {
                     sendWhatsAppMessage(createdOrder)
                     setShowOrderSummary(false)
+                    onOrderCreate(createdOrder)
+                    onOrderComplete?.()
                   }}
                   className="flex-1 bg-green-600 hover:bg-green-700"
                 >
@@ -417,12 +469,14 @@ Please contact the customer and update the order status.`
                   Send to Technician
                 </Button>
                 <Button
-                  variant="outline"
-                  onClick={() => setShowOrderSummary(false)}
-                  className="bg-transparent"
+                  onClick={() => {
+                    setShowOrderSummary(false)
+                    onOrderCreate(createdOrder)
+                    onOrderComplete?.()
+                  }}
+                  className="flex-1 bg-blue-600 hover:bg-blue-700"
                 >
-                  <X className="w-4 h-4 mr-2" />
-                  Close
+                  OK
                 </Button>
               </div>
             </div>

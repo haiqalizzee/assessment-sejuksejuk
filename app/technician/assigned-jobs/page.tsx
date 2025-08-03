@@ -17,13 +17,6 @@ export default function AssignedJobsPage() {
   return (
     <div>
       <AssignedJobs jobs={assignedJobs} onJobSelect={handleJobSelect} />
-      {/* Debug info - remove this later */}
-      <div className="mt-8 p-4 bg-gray-100 rounded-lg">
-        <h3 className="font-semibold mb-2">Debug Info:</h3>
-        <p><strong>Current User:</strong> {technician?.name} ({technician?.email})</p>
-        <p><strong>Technician ID:</strong> {technician?.id}</p>
-        <p><strong>Assigned Jobs:</strong> {assignedJobs.length}</p>
-      </div>
     </div>
   )
 } 

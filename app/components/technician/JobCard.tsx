@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { MapPin, FileText, Upload, Image, Video, File, AlertTriangle } from "lucide-react"
 import type { Order } from "@/app/types"
+import { formatDate } from "@/lib/utils"
 
 interface JobCardProps {
   job: Order
@@ -30,7 +31,7 @@ export default function JobCard({ job, isCompleted = false, onClick }: JobCardPr
       return <Badge className="bg-green-100 text-green-800 text-xs sm:text-sm">Completed</Badge>
     }
     if (job.status === "rework-required") {
-      return <Badge className="bg-orange-100 text-orange-800 text-xs sm:text-sm">⚠️ Rework Required</Badge>
+      return <Badge className="bg-orange-100 text-orange-800 text-xs sm:text-sm">Rework Required</Badge>
     }
     return <Badge className="bg-blue-100 text-blue-800 text-xs sm:text-sm">{job.serviceType}</Badge>
   }
@@ -88,9 +89,7 @@ export default function JobCard({ job, isCompleted = false, onClick }: JobCardPr
             RM {isCompleted && job.finalAmount ? job.finalAmount.toFixed(2) : job.quotedPrice}
           </span>
           <span className="text-xs text-gray-500">
-            {job.assignedAt
-              ? new Date(job.assignedAt).toLocaleDateString()
-              : new Date(job.createdAt).toLocaleDateString()}
+            {job.assignedAt ? formatDate(job.assignedAt) : formatDate(job.createdAt)}
           </span>
         </div>
       </CardContent>

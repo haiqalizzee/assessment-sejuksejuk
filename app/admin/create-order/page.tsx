@@ -10,9 +10,14 @@ export default function CreateOrderPage() {
   const router = useRouter()
 
   const handleOrderCreate = (newOrder: Order) => {
-    // Redirect to all orders page after creating an order
+    // This will be called when user closes the summary modal
+    console.log("Order created:", newOrder)
+  }
+
+  const handleOrderComplete = () => {
+    // Redirect to all orders page after user closes the summary
     router.push("/admin/all-orders")
   }
 
-  return <CreateOrderForm onOrderCreate={handleOrderCreate} />
+  return <CreateOrderForm onOrderCreate={handleOrderCreate} onOrderComplete={handleOrderComplete} />
 } 

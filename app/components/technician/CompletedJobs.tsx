@@ -7,9 +7,10 @@ import type { Order } from "@/app/types"
 
 interface CompletedJobsProps {
   jobs: Order[]
+  onJobSelect?: (job: Order) => void
 }
 
-export default function CompletedJobs({ jobs }: CompletedJobsProps) {
+export default function CompletedJobs({ jobs, onJobSelect }: CompletedJobsProps) {
   return (
     <div className="space-y-4 sm:space-y-6">
       <div>
@@ -19,7 +20,7 @@ export default function CompletedJobs({ jobs }: CompletedJobsProps) {
 
       <div className="grid gap-3 sm:gap-4">
         {jobs.length > 0 ? (
-          jobs.map((job) => <JobCard key={job.id} job={job} isCompleted={true} />)
+          jobs.map((job) => <JobCard key={job.id} job={job} isCompleted={true} onClick={() => onJobSelect?.(job)} />)
         ) : (
           <Card className="border-0 shadow-lg">
             <CardContent className="p-6 sm:p-8 text-center">

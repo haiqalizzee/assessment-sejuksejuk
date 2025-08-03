@@ -14,6 +14,7 @@ import type { Order } from "@/app/types"
 import { ordersService } from "@/lib/firebase-services"
 import FileViewerModal from "./FileViewerModal"
 import { toast } from "@/hooks/use-toast"
+import { formatDate, formatDateTime, toLocalDateTimeString } from "@/lib/utils"
 
 interface OrderDetailProps {
   order: Order
@@ -55,7 +56,7 @@ export default function OrderDetail({ order }: OrderDetailProps) {
     setIsUpdating(true)
     try {
       const reworkEntry = {
-        date: new Date().toISOString(),
+        date: toLocalDateTimeString(new Date()),
         reason: reworkReason,
         adminNotes: reworkReason,
       }
@@ -221,7 +222,7 @@ export default function OrderDetail({ order }: OrderDetailProps) {
                   )}
                   <div className="flex items-center gap-2 text-xs text-gray-500">
                     <Clock className="w-3 h-3" />
-                    Completed on {new Date(order.completedAt || "").toLocaleDateString()} at {new Date(order.completedAt || "").toLocaleTimeString()}
+                    Completed on {formatDateTime(order.completedAt || "")}
                   </div>
                   <div className="pt-3 border-t border-gray-200">
                     <Dialog open={isReworkDialogOpen} onOpenChange={setIsReworkDialogOpen}>
@@ -289,7 +290,7 @@ export default function OrderDetail({ order }: OrderDetailProps) {
                       </p>
                       <div className="flex items-center gap-2 text-xs text-gray-500">
                         <Clock className="w-3 h-3" />
-                        Marked on {new Date(order.reworkHistory[order.reworkHistory.length - 1].date).toLocaleDateString()}
+                        Marked on {formatDate(order.reworkHistory[order.reworkHistory.length - 1].date)}
                       </div>
                     </div>
                   )}
@@ -360,12 +361,35 @@ export default function OrderDetail({ order }: OrderDetailProps) {
                   <span className="text-xs text-gray-600">Quoted Price</span>
                   <span className="text-sm font-semibold text-gray-900">RM {order.quotedPrice.toFixed(2)}</span>
                 </div>
-                {order.status === "completed" && order.extraCharges && order.extraCharges > 0 && (
-                  <div className="flex justify-between items-center py-1">
-                    <span className="text-xs text-gray-600">Extra Charges</span>
-                    <span className="text-sm font-semibold text-orange-600">+RM {order.extraCharges.toFixed(2)}</span>
-                  </div>
+                
+                {/* Extra Charges - Handle both old and new format */}
+                {order.status === "completed" && order.extraCharges && (
+                  <>
+                    {/* New format: Array of charges */}
+                    {Array.isArray(order.extraCharges) && order.extraCharges.length > 0 && (
+                      <>
+                        <div className="space-y-1">
+                          <div className="text-xs text-gray-600">Extra Charges</div>
+                          {order.extraCharges.map((charge, index) => (
+                            <div key={index} className="flex justify-between items-center text-xs">
+                              <span className="text-gray-700">{charge.reason}</span>
+                              <span className="font-semibold text-orange-600">+RM {charge.amount.toFixed(2)}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </>
+                    )}
+                    
+                    {/* Old format: Single number */}
+                    {!Array.isArray(order.extraCharges) && order.extraCharges > 0 && (
+                      <div className="flex justify-between items-center py-1">
+                        <span className="text-xs text-gray-600">Extra Charges</span>
+                        <span className="text-sm font-semibold text-orange-600">+RM {order.extraCharges.toFixed(2)}</span>
+                      </div>
+                    )}
+                  </>
                 )}
+                
                 <Separator />
                 <div className="flex justify-between items-center py-1">
                   <span className="text-sm font-medium text-gray-900">Final Amount</span>
@@ -390,24 +414,24 @@ export default function OrderDetail({ order }: OrderDetailProps) {
                     <div className="w-2 h-2 bg-green-500 rounded-full mt-1.5"></div>
                     <div className="flex-1">
                       <p className="text-sm font-medium text-gray-900">Order Created</p>
-                      <p className="text-xs text-gray-500">{new Date(order.createdAt).toLocaleDateString()} at {new Date(order.createdAt).toLocaleTimeString()}</p>
+                      <p className="text-xs text-gray-500">{formatDateTime(order.createdAt)}</p>
                     </div>
                   </div>
                   {order.assignedAt && (
                     <div className="flex items-start gap-2">
                       <div className="w-2 h-2 bg-blue-500 rounded-full mt-1.5"></div>
                       <div className="flex-1">
-                        <p className="text-sm font-medium text-gray-900">Assigned to Technician</p>
-                        <p className="text-xs text-gray-500">{new Date(order.assignedAt).toLocaleDateString()} at {new Date(order.assignedAt).toLocaleTimeString()}</p>
+                        <p className="text-sm font-medium text-gray-900">Date Assigned to Technician</p>
+                        <p className="text-xs text-gray-500">{formatDate(order.assignedAt)}</p>
                       </div>
                     </div>
                   )}
-                  {order.status === "completed" && order.completedAt && (
+                  {order.completedAt && (
                     <div className="flex items-start gap-2">
                       <div className="w-2 h-2 bg-green-500 rounded-full mt-1.5"></div>
                       <div className="flex-1">
                         <p className="text-sm font-medium text-gray-900">Job Completed</p>
-                        <p className="text-xs text-gray-500">{new Date(order.completedAt).toLocaleDateString()} at {new Date(order.completedAt).toLocaleTimeString()}</p>
+                        <p className="text-xs text-gray-500">{formatDateTime(order.completedAt)}</p>
                       </div>
                     </div>
                   )}
@@ -417,8 +441,7 @@ export default function OrderDetail({ order }: OrderDetailProps) {
                         <div className="w-2 h-2 bg-orange-500 rounded-full mt-1.5"></div>
                         <div className="flex-1">
                           <p className="text-sm font-medium text-gray-900">Marked for Rework</p>
-                          <p className="text-xs text-gray-500">{new Date(rework.date).toLocaleDateString()} at {new Date(rework.date).toLocaleTimeString()}</p>
-                          <p className="text-xs text-orange-600 mt-1">{rework.reason}</p>
+                          <p className="text-xs text-gray-500">{formatDateTime(rework.date)}</p>
                         </div>
                       </div>
                     ))

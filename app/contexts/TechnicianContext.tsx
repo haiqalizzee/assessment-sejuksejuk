@@ -4,6 +4,7 @@ import { createContext, useContext, useState, useEffect } from "react"
 import { ordersService, techniciansService } from "@/lib/firebase-services"
 import { useAuth } from "@/contexts/AuthContext"
 import type { Order, Technician } from "@/app/types"
+import { toLocalDateString } from "@/lib/utils"
 
 interface TechnicianContextType {
   technician: Technician | null
@@ -104,7 +105,7 @@ export function TechnicianProvider({ children }: { children: React.ReactNode }) 
         workDone: completionData.workDone,
         remarks: completionData.remarks,
         uploadedFiles: completionData.uploadedFiles,
-        completedAt: new Date().toISOString(),
+        completedAt: toLocalDateTimeString(new Date()),
       })
       await loadJobs()
     } catch (error) {

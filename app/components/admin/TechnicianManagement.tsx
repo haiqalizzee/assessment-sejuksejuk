@@ -20,6 +20,7 @@ import { User, Phone, Mail, Edit, Trash2, UserPlus, Lock } from "lucide-react"
 import { techniciansService, usersService } from "@/lib/firebase-services"
 import { useAuth } from "@/contexts/AuthContext"
 import type { Technician } from "@/app/types"
+import { formatDate } from "@/lib/utils"
 
 export default function TechnicianManagement() {
   const { register } = useAuth()
@@ -87,7 +88,7 @@ export default function TechnicianManagement() {
           name: formData.name,
           phone: formData.phone,
           email: formData.email,
-          joinedDate: new Date().toISOString().split("T")[0]
+          joinedDate: toLocalDateString(new Date())
         })
 
         // Create Firebase Auth account without user profile
@@ -349,7 +350,7 @@ export default function TechnicianManagement() {
                         <p className="text-sm text-gray-500">{technician.email}</p>
                       </div>
                     </TableCell>
-                    <TableCell>{new Date(technician.joinedDate).toLocaleDateString()}</TableCell>
+                    <TableCell>{formatDate(technician.joinedDate)}</TableCell>
                     <TableCell>
                       <div className="flex gap-2">
                         <Button

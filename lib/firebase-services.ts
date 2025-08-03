@@ -20,6 +20,7 @@ import {
 import { ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage"
 import { app, isConfigValid } from "./firebase"
 import type { Order, Technician, TechnicianKPI } from "@/app/types"
+import { toLocalDateString, toLocalDateTimeString } from "@/lib/utils"
 
 // Lazy initialization of Firebase services
 let auth: Auth | null = null
@@ -67,10 +68,15 @@ const USERS_COLLECTION = "users"
 
 // Helper function to handle Firestore timestamp conversion
 const convertTimestamp = (timestamp: any): string => {
-  if (!timestamp) return new Date().toISOString().split("T")[0]
-  if (timestamp.toDate) return timestamp.toDate().toISOString().split("T")[0]
-  if (typeof timestamp === "string") return timestamp
-  return new Date(timestamp).toISOString().split("T")[0]
+  if (!timestamp) return toLocalDateTimeString(new Date())
+  if (timestamp.toDate) return toLocalDateTimeString(timestamp.toDate())
+  if (typeof timestamp === "string") {
+    // If it's already a datetime string, return as is
+    if (timestamp.includes('T')) return timestamp
+    // If it's a date-only string, convert to datetime
+    return toLocalDateTimeString(new Date(timestamp + 'T00:00:00'))
+  }
+  return toLocalDateTimeString(new Date(timestamp))
 }
 
 // Helper function to generate technician ID

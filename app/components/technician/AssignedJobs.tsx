@@ -11,6 +11,20 @@ interface AssignedJobsProps {
 }
 
 export default function AssignedJobs({ jobs, onJobSelect }: AssignedJobsProps) {
+  // Sort jobs to prioritize rework-required jobs at the top
+  const sortedJobs = [...jobs].sort((a, b) => {
+    // If job a requires rework and job b doesn't, a should come first
+    if (a.status === "rework-required" && b.status !== "rework-required") {
+      return -1
+    }
+    // If job b requires rework and job a doesn't, b should come first
+    if (b.status === "rework-required" && a.status !== "rework-required") {
+      return 1
+    }
+    // If both have the same rework status, maintain original order
+    return 0
+  })
+
   return (
     <div className="space-y-4 sm:space-y-6">
       <div>
@@ -19,8 +33,8 @@ export default function AssignedJobs({ jobs, onJobSelect }: AssignedJobsProps) {
       </div>
 
       <div className="grid gap-3 sm:gap-4">
-        {jobs.length > 0 ? (
-          jobs.map((job) => <JobCard key={job.id} job={job} onClick={() => onJobSelect(job)} />)
+        {sortedJobs.length > 0 ? (
+          sortedJobs.map((job) => <JobCard key={job.id} job={job} onClick={() => onJobSelect(job)} />)
         ) : (
           <Card className="border-0 shadow-lg">
             <CardContent className="p-6 sm:p-8 text-center">
