@@ -96,7 +96,7 @@ export default function OrdersList({
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
             <Input
               type="text"
-              placeholder="Search by customer name, phone, service type, technician, order ID, or status..."
+              placeholder="Search..."
               value={searchTerm}
               onChange={(e) => onSearchChange(e.target.value)}
               className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -163,6 +163,21 @@ export default function OrdersList({
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+          )}
+
+          {/* Clear Filters Button */}
+          {hasActiveFilters && (
+            <div className="flex items-end">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={clearFilters}
+                className="flex items-center gap-2 text-gray-600 hover:text-gray-800 hover:bg-gray-50"
+              >
+                <X className="w-4 h-4" />
+                Clear Filters
+              </Button>
             </div>
           )}
         </div>

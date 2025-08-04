@@ -2,12 +2,15 @@
 
 import { Button } from "@/components/ui/button"
 import { LogOut, Snowflake } from "lucide-react"
+import { useTechnician } from "@/app/contexts/TechnicianContext"
 
 interface TechnicianHeaderProps {
   onBack: () => void
 }
 
 export default function TechnicianHeader({ onBack }: TechnicianHeaderProps) {
+  const { technician } = useTechnician()
+
   return (
     <header className="bg-white shadow-sm border-b border-blue-100 sticky top-0 z-50">
       <div className="px-3 py-3 sm:px-4 sm:py-4">
@@ -18,7 +21,9 @@ export default function TechnicianHeader({ onBack }: TechnicianHeaderProps) {
             </div>
             <div>
               <h1 className="text-base sm:text-lg font-bold text-blue-900">Technician Portal</h1>
-              <p className="text-xs sm:text-sm text-blue-600">name Sejuk Sejuk Service</p>
+              <p className="text-xs sm:text-sm text-blue-600">
+                Welcome! Technician {technician?.name || "Loading..."}
+              </p>
             </div>
           </div>
           <Button

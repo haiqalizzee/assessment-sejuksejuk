@@ -348,12 +348,11 @@ export default function OrderDetail({ order }: OrderDetailProps) {
 
           {/* Right Column - Financial & Timeline */}
           <div className="space-y-4">
-            {/* Financial Summary */}
             <Card className="border-0 shadow-sm">
               <CardHeader className="pb-3">
                 <CardTitle className="flex items-center gap-2 text-base">
                   <DollarSign className="w-4 h-4 text-green-600" />
-                  Financial Summary
+                  Price Breakdown
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
