@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import LandingPage from "./components/LandingPage"
+import { LoginForm } from "@/components/login-form"
 import { useAuth } from "@/contexts/AuthContext"
-import type { UserRole } from "./types"
+import type { UserRole } from "@/app/types"
 
 export default function App() {
   const { user, userProfile, logout, loading, isConfigured } = useAuth()
@@ -57,7 +57,11 @@ export default function App() {
 
   // Only show landing page if user is not authenticated
   if (!user) {
-    return <LandingPage onRoleSelect={handleRoleSelect} />
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-cyan-100 flex items-center justify-center p-4">
+        <LoginForm onRoleSelect={handleRoleSelect} />
+      </div>
+    )
   }
 
   // Show loading while redirecting authenticated users
