@@ -569,16 +569,6 @@ Please contact the customer and update the order status.`
                   />
                 </div>
               </div>
-
-              {/* Combined Address Preview */}
-              {formData.address && formData.city && formData.postcode && formData.state && (
-                <div className="bg-blue-50 p-3 rounded-lg">
-                  <Label className="text-sm font-medium text-blue-900">Complete Address:</Label>
-                  <p className="text-sm text-blue-700 mt-1">
-                    {combineAddress()}
-                  </p>
-                </div>
-              )}
             </div>
 
             <div className="space-y-2">
