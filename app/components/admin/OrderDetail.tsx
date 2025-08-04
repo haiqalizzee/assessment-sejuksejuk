@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import React, { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -56,14 +56,13 @@ export default function OrderDetail({ order }: OrderDetailProps) {
       const reworkEntry = {
         date: toLocalDateTimeString(new Date()),
         reason: reworkReason,
-        adminNotes: "",
       }
 
       const updates = {
         status: "rework-required" as const,
         reworkHistory: [...(order.reworkHistory || []), reworkEntry],
         reworkCount: (order.reworkCount || 0) + 1,
-        originalCompletedAt: order.completedAt,
+
       }
 
       await ordersService.update(order.id, updates)
@@ -402,7 +401,7 @@ export default function OrderDetail({ order }: OrderDetailProps) {
               <CardHeader className="pb-3">
                 <CardTitle className="flex items-center gap-2 text-base">
                   <Calendar className="w-4 h-4 text-blue-600" />
-                  Order Timeline
+                  Job Timeline
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
@@ -434,13 +433,24 @@ export default function OrderDetail({ order }: OrderDetailProps) {
                   )}
                   {order.reworkHistory && order.reworkHistory.length > 0 && (
                     order.reworkHistory.map((rework, index) => (
-                      <div key={index} className="flex items-start gap-2">
-                        <div className="w-2 h-2 bg-orange-500 rounded-full mt-1.5"></div>
-                        <div className="flex-1">
-                          <p className="text-sm font-medium text-gray-900">Marked for Rework</p>
-                          <p className="text-xs text-gray-500">{formatDateTime(rework.date)}</p>
+                      <React.Fragment key={index}>
+                        <div className="flex items-start gap-2">
+                          <div className="w-2 h-2 bg-orange-500 rounded-full mt-1.5"></div>
+                          <div className="flex-1">
+                            <p className="text-sm font-medium text-gray-900">Marked for Rework</p>
+                            <p className="text-xs text-gray-500">{formatDateTime(rework.date)}</p>
+                          </div>
                         </div>
-                      </div>
+                        {rework.completionDate && (
+                          <div className="flex items-start gap-2">
+                            <div className="w-2 h-2 bg-green-500 rounded-full mt-1.5"></div>
+                            <div className="flex-1">
+                              <p className="text-sm font-medium text-gray-900">Rework Completed</p>
+                              <p className="text-xs text-gray-500">{formatDateTime(rework.completionDate)}</p>
+                            </div>
+                          </div>
+                        )}
+                      </React.Fragment>
                     ))
                   )}
                 </div>

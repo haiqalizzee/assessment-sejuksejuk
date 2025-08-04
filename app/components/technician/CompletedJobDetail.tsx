@@ -241,10 +241,6 @@ export default function CompletedJobDetail({ job, onBack }: CompletedJobDetailPr
                                 <span className="font-medium text-orange-700">Reason:</span>
                                 <p className="text-orange-800 mt-1">{rework.reason}</p>
                               </div>
-                              <div>
-                                <span className="font-medium text-orange-700">Admin Notes:</span>
-                                <p className="text-orange-800 mt-1">{rework.adminNotes}</p>
-                              </div>
                               {rework.technicianNotes && (
                                 <div>
                                   <span className="font-medium text-orange-700">Technician Notes:</span>

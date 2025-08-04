@@ -51,13 +51,6 @@ export default function JobCard({ job, isCompleted = false, onClick }: JobCardPr
           {getStatusBadge()}
         </div>
         <CardDescription className="text-sm sm:text-base text-blue-600">{job.customerName}</CardDescription>
-        {isRework && job.reworkHistory && job.reworkHistory.length > 0 && (
-          <div className="mt-2 p-2 bg-orange-100 border border-orange-200 rounded-md">
-            <p className="text-xs text-orange-700">
-              <strong>Rework:</strong> {job.reworkHistory[job.reworkHistory.length - 1].reason}
-            </p>
-          </div>
-        )}
       </CardHeader>
       <CardContent className="space-y-2 sm:space-y-3 px-4 sm:px-6 pb-4 sm:pb-6">
         <div className="flex items-start gap-2">
@@ -66,7 +59,11 @@ export default function JobCard({ job, isCompleted = false, onClick }: JobCardPr
         </div>
         <div className="flex items-start gap-2">
           <FileText className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
-          <p className="text-xs sm:text-sm text-gray-700">{job.problemDescription}</p>
+          <p className="text-xs sm:text-sm text-gray-700">
+            {isRework && job.reworkHistory && job.reworkHistory.length > 0 
+              ? job.reworkHistory[job.reworkHistory.length - 1].reason 
+              : job.problemDescription}
+          </p>
         </div>
         
         {/* Show uploaded files for completed jobs */}

@@ -23,11 +23,10 @@ export interface Order {
   reworkHistory?: Array<{
     date: string
     reason: string
-    adminNotes: string
-    technicianNotes?: string
+    reworkNotes?: string
+    completionDate?: string
   }>
   reworkCount?: number
-  originalCompletedAt?: string
 }
 
 export interface TechnicianKPI {

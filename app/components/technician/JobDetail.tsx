@@ -184,20 +184,27 @@ export default function JobDetail({ job, onBack, onJobComplete }: JobDetailProps
         workDone: jobFormData.workDone,
         extraCharges: extraCharges,
         finalAmount: finalAmount,
-        remarks: jobFormData.remarks,
         uploadedFiles: uploadedFileUrls,
         completedAt: toLocalDateTimeString(new Date()),
       }
 
-      // If this is a rework job, add technician notes to the latest rework entry
+      // If this is a rework job, add completion details to the latest rework entry
       if (isRework && job.reworkHistory && job.reworkHistory.length > 0) {
         const latestReworkIndex = job.reworkHistory.length - 1
         const updatedReworkHistory = [...job.reworkHistory]
         updatedReworkHistory[latestReworkIndex] = {
           ...updatedReworkHistory[latestReworkIndex],
-          technicianNotes: jobFormData.remarks || "Rework completed"
+          reworkNotes: jobFormData.remarks || "Rework completed",
+          completionDate: toLocalDateTimeString(new Date())
         }
         updateData.reworkHistory = updatedReworkHistory
+        // Remove completedAt update for rework jobs to keep original completion date
+        delete updateData.completedAt
+        // Don't update remarks for rework jobs to preserve original remarks
+        delete updateData.remarks
+      } else {
+        // Only update remarks for regular jobs (not rework)
+        updateData.remarks = jobFormData.remarks
       }
 
       await ordersService.update(job.id, updateData)
@@ -303,7 +310,7 @@ Please check and leave feedback. Thank you!
               <div className="min-w-0 flex-1">
                 <h3 className="font-semibold text-orange-900 mb-1 text-sm sm:text-base">Rework Required</h3>
                 <p className="text-orange-800 text-xs sm:text-sm break-words">
-                  {job.reworkHistory[job.reworkHistory.length - 1].reason}
+                  Reason: {job.reworkHistory[job.reworkHistory.length - 1].reason}
                 </p>
               </div>
             </div>
@@ -443,212 +450,248 @@ Please check and leave feedback. Thank you!
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4 sm:space-y-6">
-              {/* Work Done */}
-              <div className="space-y-2 sm:space-y-3">
-                <Label htmlFor="workDone" className="text-sm sm:text-base font-semibold flex items-center gap-2">
-                  <Wrench className="w-4 h-4 sm:w-5 h-5" />
-                  Work Done *
-                </Label>
-                <Textarea
-                  id="workDone"
-                  value={jobFormData.workDone}
-                  onChange={(e) => setJobFormData((prev) => ({ ...prev, workDone: e.target.value }))}
-                  placeholder="Describe the work completed in detail..."
-                  required
-                  className="min-h-[100px] sm:min-h-[120px] text-sm sm:text-base"
-                />
-              </div>
+              {job.status === "rework-required" ? (
+                // Simplified form for rework jobs
+                <div className="space-y-4">
+                  <div className="space-y-2 sm:space-y-3">
+                    <Label htmlFor="reworkNotes" className="text-sm sm:text-base font-semibold flex items-center gap-2">
+                      <FileText className="w-4 h-4 sm:w-5 h-5" />
+                      Rework Notes *
+                    </Label>
+                    <Textarea
+                      id="reworkNotes"
+                      value={jobFormData.remarks}
+                      onChange={(e) => setJobFormData((prev) => ({ ...prev, remarks: e.target.value, workDone: e.target.value }))}
+                      placeholder="Describe how the rework requirements were addressed..."
+                      required
+                      className="min-h-[120px] sm:min-h-[150px] text-sm sm:text-base"
+                    />
+                  </div>
 
-              {/* Extra Charges */}
-              <div className="space-y-3 sm:space-y-4">
-                <Label className="text-sm sm:text-base font-semibold flex items-center gap-2">
-                  <DollarSign className="w-4 h-4 sm:w-5 h-5" />
-                  Extra Charges (RM)
-                </Label>
-                <div className="space-y-2">
-                  {extraCharges.map((charge) => (
-                    <div key={charge.id} className="flex items-center justify-between gap-2">
-                      <div className="flex-1">
-                        <Input
-                          type="text"
-                          placeholder="Reason for extra charge (e.g., travel, parts)"
-                          value={charge.reason}
-                          onChange={(e) => updateExtraCharge(charge.id, "reason", e.target.value)}
-                          className="text-sm sm:text-base"
-                        />
-                      </div>
-                      <div className="w-24">
-                        <Input
-                          type="number"
-                          step="0.01"
-                          value={charge.amount}
-                          onChange={(e) => updateExtraCharge(charge.id, "amount", Number(e.target.value))}
-                          className="text-sm sm:text-base"
-                        />
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => removeExtraCharge(charge.id)}
-                        className="text-red-500 hover:text-red-600"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-                <Button
-                  variant="outline"
-                  onClick={addExtraCharge}
-                  className="w-full"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Extra Charge
-                </Button>
-              </div>
-
-              {/* Pricing Summary */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                <div className="space-y-2 sm:space-y-3">
-                  <Label className="text-sm sm:text-base font-semibold flex items-center gap-2">
-                    <DollarSign className="w-4 h-4 sm:w-5 h-5" />
-                    Quoted Price (RM)
-                  </Label>
-                  <Input 
-                    value={job.quotedPrice.toFixed(2)} 
-                    disabled 
-                    className="text-sm sm:text-lg bg-gray-50" 
-                  />
-                </div>
-                <div className="space-y-2 sm:space-y-3">
-                  <Label className="text-sm sm:text-base font-semibold flex items-center gap-2">
-                    <DollarSign className="w-4 h-4 sm:w-5 h-5" />
-                    Final Amount (RM)
-                  </Label>
-                  <Input 
-                    value={finalAmount.toFixed(2)} 
-                    disabled 
-                    className="text-sm sm:text-lg font-bold text-green-600 bg-green-50" 
-                  />
-                </div>
-              </div>
-
-              {/* Extra Charges Summary */}
-              {extraCharges.length > 0 && (
-                <div className="space-y-2 sm:space-y-3">
-                  <Label className="text-sm sm:text-base font-semibold flex items-center gap-2">
-                    <DollarSign className="w-4 h-4 sm:w-5 h-5" />
-                    Extra Charges Summary
-                  </Label>
-                  <div className="space-y-2 p-3 bg-blue-50 rounded-lg">
-                    {extraCharges.map((charge) => (
-                      <div key={charge.id} className="flex justify-between items-center text-sm">
-                        <span className="text-gray-700">{charge.reason}</span>
-                        <span className="font-semibold text-blue-600">RM {(charge.amount || 0).toFixed(2)}</span>
-                      </div>
-                    ))}
-                    <Separator className="my-2" />
-                    <div className="flex justify-between items-center font-semibold">
-                      <span>Total Extra Charges:</span>
-                      <span className="text-blue-600">RM {totalExtraCharges.toFixed(2)}</span>
-                    </div>
+                  {/* Completion Time */}
+                  <div className="space-y-2 sm:space-y-3">
+                    <Label className="text-sm sm:text-base font-semibold flex items-center gap-2">
+                      <Clock className="w-4 h-4 sm:w-5 h-5" />
+                      Rework Completion Time
+                    </Label>
+                    <Input 
+                      value={new Date().toLocaleString()} 
+                      disabled 
+                      className="text-sm sm:text-base bg-gray-50" 
+                    />
                   </div>
                 </div>
-              )}
+              ) : (
+                // Full form for regular jobs
+                <>
+                  {/* Work Done */}
+                  <div className="space-y-2 sm:space-y-3">
+                    <Label htmlFor="workDone" className="text-sm sm:text-base font-semibold flex items-center gap-2">
+                      <Wrench className="w-4 h-4 sm:w-5 h-5" />
+                      Work Done *
+                    </Label>
+                    <Textarea
+                      id="workDone"
+                      value={jobFormData.workDone}
+                      onChange={(e) => setJobFormData((prev) => ({ ...prev, workDone: e.target.value }))}
+                      placeholder="Describe the work completed in detail..."
+                      required
+                      className="min-h-[100px] sm:min-h-[120px] text-sm sm:text-base"
+                    />
+                  </div>
 
-              {/* File Upload */}
-              <div className="space-y-3 sm:space-y-4">
-                <Label className="text-sm sm:text-base font-semibold flex items-center gap-2">
-                  <Upload className="w-4 h-4 sm:w-5 h-5" />
-                  Upload Files (Max 6 files)
-                </Label>
-                
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 sm:p-6 text-center hover:border-gray-400 transition-colors">
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    multiple
-                    accept="image/*,video/*,.pdf"
-                    onChange={handleFileUpload}
-                    className="hidden"
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={uploadedFiles.length >= 6}
-                    className="mb-2 sm:mb-3"
-                  >
-                    <Upload className="w-4 h-4 mr-2" />
-                    Choose Files
-                  </Button>
-                  <p className="text-xs sm:text-sm text-gray-500">
-                    Images, Videos, or PDF files ({uploadedFiles.length}/6)
-                  </p>
-                </div>
-
-                {uploadedFiles.length > 0 && (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
-                    {uploadedFiles.map((file) => (
-                      <div key={file.id} className="relative group">
-                        <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden border">
-                          {file.type === "image" ? (
-                            <img
-                              src={file.preview || "/placeholder.svg"}
-                              alt="Preview"
-                              className="w-full h-full object-cover"
+                  {/* Extra Charges */}
+                  <div className="space-y-3 sm:space-y-4">
+                    <Label className="text-sm sm:text-base font-semibold flex items-center gap-2">
+                      <DollarSign className="w-4 h-4 sm:w-5 h-5" />
+                      Extra Charges (RM)
+                    </Label>
+                    <div className="space-y-2">
+                      {extraCharges.map((charge) => (
+                        <div key={charge.id} className="flex items-center justify-between gap-2">
+                          <div className="flex-1">
+                            <Input
+                              type="text"
+                              placeholder="Reason for extra charge (e.g., travel, parts)"
+                              value={charge.reason}
+                              onChange={(e) => updateExtraCharge(charge.id, "reason", e.target.value)}
+                              className="text-sm sm:text-base"
                             />
-                          ) : file.type === "video" ? (
-                            <div className="w-full h-full flex items-center justify-center">
-                              <Video className="w-6 h-6 sm:w-8 h-8 text-gray-400" />
-                            </div>
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center">
-                              <File className="w-6 h-6 sm:w-8 h-8 text-gray-400" />
-                            </div>
-                          )}
+                          </div>
+                          <div className="w-24">
+                            <Input
+                              type="number"
+                              step="0.01"
+                              value={charge.amount}
+                              onChange={(e) => updateExtraCharge(charge.id, "amount", Number(e.target.value))}
+                              className="text-sm sm:text-base"
+                            />
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => removeExtraCharge(charge.id)}
+                            className="text-red-500 hover:text-red-600"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => removeFile(file.id)}
-                          className="absolute -top-1 -right-1 sm:-top-2 sm:-right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
-                        >
-                          <X className="w-2 h-2 sm:w-3 h-3" />
-                        </button>
-                        <p className="text-xs text-gray-500 mt-1 sm:mt-2 truncate text-center break-words">{file.file.name}</p>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
+                    <Button
+                      variant="outline"
+                      onClick={addExtraCharge}
+                      className="w-full"
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Extra Charge
+                    </Button>
                   </div>
-                )}
-              </div>
 
-              {/* Remarks */}
-              <div className="space-y-2 sm:space-y-3">
-                <Label htmlFor="remarks" className="text-sm sm:text-base font-semibold flex items-center gap-2">
-                  <FileText className="w-4 h-4 sm:w-5 h-5" />
-                  Remarks
-                </Label>
-                <Textarea
-                  id="remarks"
-                  value={jobFormData.remarks}
-                  onChange={(e) => setJobFormData((prev) => ({ ...prev, remarks: e.target.value }))}
-                  placeholder="Additional remarks or notes..."
-                  className="min-h-[80px] sm:min-h-[100px] text-sm sm:text-base"
-                />
-              </div>
+                  {/* Pricing Summary */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                    <div className="space-y-2 sm:space-y-3">
+                      <Label className="text-sm sm:text-base font-semibold flex items-center gap-2">
+                        <DollarSign className="w-4 h-4 sm:w-5 h-5" />
+                        Quoted Price (RM)
+                      </Label>
+                      <Input 
+                        value={job.quotedPrice.toFixed(2)} 
+                        disabled 
+                        className="text-sm sm:text-lg bg-gray-50" 
+                      />
+                    </div>
+                    <div className="space-y-2 sm:space-y-3">
+                      <Label className="text-sm sm:text-base font-semibold flex items-center gap-2">
+                        <DollarSign className="w-4 h-4 sm:w-5 h-5" />
+                        Final Amount (RM)
+                      </Label>
+                      <Input 
+                        value={finalAmount.toFixed(2)} 
+                        disabled 
+                        className="text-sm sm:text-lg font-bold text-green-600 bg-green-50" 
+                      />
+                    </div>
+                  </div>
 
-              {/* Completion Time */}
-              <div className="space-y-2 sm:space-y-3">
-                <Label className="text-sm sm:text-base font-semibold flex items-center gap-2">
-                  <Clock className="w-4 h-4 sm:w-5 h-5" />
-                  Completion Time
-                </Label>
-                <Input 
-                  value={new Date().toLocaleString()} 
-                  disabled 
-                  className="text-sm sm:text-base bg-gray-50" 
-                />
-              </div>
+                  {/* Extra Charges Summary */}
+                  {extraCharges.length > 0 && (
+                    <div className="space-y-2 sm:space-y-3">
+                      <Label className="text-sm sm:text-base font-semibold flex items-center gap-2">
+                        <DollarSign className="w-4 h-4 sm:w-5 h-5" />
+                        Extra Charges Summary
+                      </Label>
+                      <div className="space-y-2 p-3 bg-blue-50 rounded-lg">
+                        {extraCharges.map((charge) => (
+                          <div key={charge.id} className="flex justify-between items-center text-sm">
+                            <span className="text-gray-700">{charge.reason}</span>
+                            <span className="font-semibold text-blue-600">RM {(charge.amount || 0).toFixed(2)}</span>
+                          </div>
+                        ))}
+                        <Separator className="my-2" />
+                        <div className="flex justify-between items-center font-semibold">
+                          <span>Total Extra Charges:</span>
+                          <span className="text-blue-600">RM {totalExtraCharges.toFixed(2)}</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* File Upload */}
+                  <div className="space-y-3 sm:space-y-4">
+                    <Label className="text-sm sm:text-base font-semibold flex items-center gap-2">
+                      <Upload className="w-4 h-4 sm:w-5 h-5" />
+                      Upload Files (Max 6 files)
+                    </Label>
+                    
+                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 sm:p-6 text-center hover:border-gray-400 transition-colors">
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        multiple
+                        accept="image/*,video/*,.pdf"
+                        onChange={handleFileUpload}
+                        className="hidden"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={uploadedFiles.length >= 6}
+                        className="mb-2 sm:mb-3"
+                      >
+                        <Upload className="w-4 h-4 mr-2" />
+                        Choose Files
+                      </Button>
+                      <p className="text-xs sm:text-sm text-gray-500">
+                        Images, Videos, or PDF files ({uploadedFiles.length}/6)
+                      </p>
+                    </div>
+
+                    {uploadedFiles.length > 0 && (
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
+                        {uploadedFiles.map((file) => (
+                          <div key={file.id} className="relative group">
+                            <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden border">
+                              {file.type === "image" ? (
+                                <img
+                                  src={file.preview || "/placeholder.svg"}
+                                  alt="Preview"
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : file.type === "video" ? (
+                                <div className="w-full h-full flex items-center justify-center">
+                                  <Video className="w-6 h-6 sm:w-8 h-8 text-gray-400" />
+                                </div>
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center">
+                                  <File className="w-6 h-6 sm:w-8 h-8 text-gray-400" />
+                                </div>
+                              )}
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => removeFile(file.id)}
+                              className="absolute -top-1 -right-1 sm:-top-2 sm:-right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                            >
+                              <X className="w-2 h-2 sm:w-3 h-3" />
+                            </button>
+                            <p className="text-xs text-gray-500 mt-1 sm:mt-2 truncate text-center break-words">{file.file.name}</p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Remarks */}
+                  <div className="space-y-2 sm:space-y-3">
+                    <Label htmlFor="remarks" className="text-sm sm:text-base font-semibold flex items-center gap-2">
+                      <FileText className="w-4 h-4 sm:w-5 h-5" />
+                      Remarks
+                    </Label>
+                    <Textarea
+                      id="remarks"
+                      value={jobFormData.remarks}
+                      onChange={(e) => setJobFormData((prev) => ({ ...prev, remarks: e.target.value }))}
+                      placeholder="Additional remarks or notes..."
+                      className="min-h-[80px] sm:min-h-[100px] text-sm sm:text-base"
+                    />
+                  </div>
+
+                  {/* Completion Time */}
+                  <div className="space-y-2 sm:space-y-3">
+                    <Label className="text-sm sm:text-base font-semibold flex items-center gap-2">
+                      <Clock className="w-4 h-4 sm:w-5 h-5" />
+                      Completion Time
+                    </Label>
+                    <Input 
+                      value={new Date().toLocaleString()} 
+                      disabled 
+                      className="text-sm sm:text-base bg-gray-50" 
+                    />
+                  </div>
+                </>
+              )}
 
               {/* Submit Button */}
               <Button
