@@ -61,4 +61,17 @@ Some things were not clearly mentioned, so I made these decisions:
 - **Firebase** – Handles backend and database
 - **Tailwind CSS** – For fast and clean styling
 - **Shadcn/ui** – For ready-to-use UI components
+
+---
+
+### Admin Credentials
+- **Email:** admin@sejuksejuk.com
+- **Password:** admin123
+
+### Technician Credentials
+- **Ali:** ali@sejuksejuk.com / ali123
+- **Bala:** bala@sejuksejuk.com / bala123
+- **John:** john@sejuksejuk.com / john123
+- **Yusoff:** yusoff@sejuksejuk.com / yusoff123
+
 ---
