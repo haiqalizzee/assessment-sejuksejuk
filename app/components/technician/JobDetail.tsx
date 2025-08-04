@@ -1,8 +1,6 @@
 "use client"
 
-import type React from "react"
-
-import { useState, useRef } from "react"
+import React, { useState, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -20,7 +18,7 @@ import { toLocalDateTimeString } from "@/lib/utils"
 interface ExtraCharge {
   id: string
   reason: string
-  amount: number
+  amount: number | undefined
 }
 
 interface JobDetailProps {
@@ -81,7 +79,7 @@ export default function JobDetail({ job, onBack, onJobComplete }: JobDetailProps
     const newCharge: ExtraCharge = {
       id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
       reason: "",
-      amount: 0
+      amount: undefined
     }
     setExtraCharges(prev => [...prev, newCharge])
   }
@@ -96,7 +94,7 @@ export default function JobDetail({ job, onBack, onJobComplete }: JobDetailProps
     setExtraCharges(prev => prev.filter(charge => charge.id !== id))
   }
 
-  const totalExtraCharges = extraCharges.reduce((sum, charge) => sum + charge.amount, 0)
+  const totalExtraCharges = extraCharges.reduce((sum, charge) => sum + (charge.amount || 0), 0)
   const finalAmount = job.quotedPrice + totalExtraCharges
 
   const uploadFilesToFirebase = async (): Promise<Array<{ url: string; name: string; type: string }>> => {
@@ -152,7 +150,7 @@ export default function JobDetail({ job, onBack, onJobComplete }: JobDetailProps
     }
 
     // Validate extra charges
-    const invalidCharges = extraCharges.filter(charge => !charge.reason.trim() || charge.amount <= 0)
+    const invalidCharges = extraCharges.filter(charge => !charge.reason.trim() || !charge.amount || charge.amount <= 0)
     if (invalidCharges.length > 0) {
       toast({
         title: "Error",
@@ -210,7 +208,7 @@ export default function JobDetail({ job, onBack, onJobComplete }: JobDetailProps
       let extraChargesText = ""
       if (extraCharges.length > 0) {
         extraChargesText = "\n\nExtra Charges:\n" + extraCharges.map(charge => 
-          `• ${charge.reason}: RM ${charge.amount.toFixed(2)}`
+          `• ${charge.reason}: RM ${(charge.amount || 0).toFixed(2)}`
         ).join("\n")
       }
       
@@ -546,7 +544,7 @@ Please check and leave feedback. Thank you!
                     {extraCharges.map((charge) => (
                       <div key={charge.id} className="flex justify-between items-center text-sm">
                         <span className="text-gray-700">{charge.reason}</span>
-                        <span className="font-semibold text-blue-600">RM {charge.amount.toFixed(2)}</span>
+                        <span className="font-semibold text-blue-600">RM {(charge.amount || 0).toFixed(2)}</span>
                       </div>
                     ))}
                     <Separator className="my-2" />

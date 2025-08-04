@@ -56,7 +56,7 @@ export default function OrderDetail({ order }: OrderDetailProps) {
       const reworkEntry = {
         date: toLocalDateTimeString(new Date()),
         reason: reworkReason,
-        adminNotes: reworkReason,
+        adminNotes: "",
       }
 
       const updates = {
