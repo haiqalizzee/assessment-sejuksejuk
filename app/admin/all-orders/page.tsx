@@ -16,9 +16,7 @@ const SERVICE_TYPES = [
 // Statuses from the Order interface
 const ORDER_STATUSES = [
   "pending",
-  "in-progress", 
   "completed",
-  "assigned",
   "rework-required"
 ] as const
 

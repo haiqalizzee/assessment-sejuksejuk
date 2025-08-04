@@ -284,7 +284,7 @@ Please check and leave feedback. Thank you!
               {job.status === "rework-required" ? "Complete Rework" : "Complete Job"}
             </h1>
             <Badge variant={job.status === "rework-required" ? "destructive" : "default"} className="w-fit">
-              {job.status === "rework-required" ? "Rework Required" : "In Progress"}
+              {job.status === "rework-required" ? "Rework Required" : "Completed"}
             </Badge>
           </div>
           <p className="text-sm sm:text-base text-gray-600">

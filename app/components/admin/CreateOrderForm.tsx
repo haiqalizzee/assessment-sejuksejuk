@@ -221,7 +221,7 @@ export default function CreateOrderForm({ onOrderCreate, onOrderComplete }: Crea
   // Send WhatsApp message
   const sendWhatsAppMessage = (order: Order) => {
     const technician = technicians.find(tech => tech.id === order.assignedTechnicianId)
-    const message = `🔧 *New Service Order Assigned*
+    const message = `*New Service Order Assigned*
 
 *Order ID:* ${order.id}
 *Customer:* ${order.customerName}
@@ -257,10 +257,14 @@ Please contact the customer and update the order status.`
         return
       }
 
+      // Get today's date in local timezone
       const today = new Date()
       today.setHours(0, 0, 0, 0)
       
-      if (formData.assignedDate < today) {
+      const assignedDate = new Date(formData.assignedDate!)
+      assignedDate.setHours(0, 0, 0, 0)
+      
+      if (assignedDate.getTime() < today.getTime()) {
         toast({
           title: "Invalid Date",
           description: "Assigned date cannot be in the past. Please select today or a future date.",
@@ -457,7 +461,11 @@ Please contact the customer and update the order status.`
                     setFormData(prev => ({ ...prev, assignedDate: date }))
                   }}
                   placeholder="Select assigned date"
-                  minDate={new Date()}
+                  minDate={(() => {
+                    const today = new Date()
+                    today.setHours(0, 0, 0, 0)
+                    return today
+                  })()}
                   className="transition-all duration-200 focus:ring-2 focus:ring-blue-500 text-sm lg:text-base"
                 />
               </div>
