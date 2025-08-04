@@ -20,22 +20,33 @@ export default function JobDetailPage() {
   const jobId = params.jobId as string
 
   useEffect(() => {
-    if (jobId) {
-      loadJob()
+    if (!jobId) return
+
+    console.log("Setting up real-time listener for job:", jobId)
+    
+    // Set up real-time listener for this specific job
+    const unsubscribe = ordersService.onSnapshot((allOrders) => {
+      console.log("Real-time orders update received for job detail:", allOrders)
+      
+      // Find the specific job
+      const jobData = allOrders.find((order) => order.id === jobId)
+      console.log("Found job data:", jobData)
+      
+      if (jobData) {
+        setJob(jobData)
+      } else {
+        console.log("Job not found in real-time data")
+        setJob(null)
+      }
+      setIsLoading(false)
+    })
+
+    // Cleanup function to unsubscribe when component unmounts or jobId changes
+    return () => {
+      console.log("Cleaning up job detail real-time listener")
+      unsubscribe()
     }
   }, [jobId])
-
-  const loadJob = async () => {
-    try {
-      setIsLoading(true)
-      const jobData = await ordersService.getById(jobId)
-      setJob(jobData)
-    } catch (error) {
-      console.error("Error loading job:", error)
-    } finally {
-      setIsLoading(false)
-    }
-  }
 
   const handleBack = () => {
     // Check if the job is completed to determine the correct back route

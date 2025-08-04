@@ -49,14 +49,54 @@ export function TechnicianProvider({ children }: { children: React.ReactNode }) 
       if (technicianData) {
         console.log("Setting technician with ID:", technicianData.id)
         setTechnician(technicianData)
-        loadJobs(technicianData.id)
       } else {
         console.error("No technician found for email:", user?.email)
+        setIsLoading(false)
       }
     } catch (error) {
       console.error("Error loading technician data:", error)
+      setIsLoading(false)
     }
   }
+
+  // Set up real-time listeners when technician changes
+  useEffect(() => {
+    if (!technician?.id) return
+
+    console.log("Setting up real-time listeners for technician:", technician.id)
+    
+    const unsubscribe = ordersService.onSnapshot((allOrders) => {
+      console.log("Real-time orders update received:", allOrders)
+      
+      // Filter orders for this technician
+      const technicianOrders = allOrders.filter((order) => 
+        order.assignedTechnicianId === technician.id
+      )
+      
+      console.log("Filtered orders for technician:", technicianOrders)
+      
+      const assignedJobs = technicianOrders.filter((job) => 
+        job.status === "pending" || 
+        job.status === "assigned" || 
+        job.status === "in-progress" ||
+        job.status === "rework-required"
+      )
+      const completedJobs = technicianOrders.filter((job) => job.status === "completed")
+      
+      console.log("Assigned jobs:", assignedJobs)
+      console.log("Completed jobs:", completedJobs)
+      
+      setAssignedJobs(assignedJobs)
+      setCompletedJobs(completedJobs)
+      setIsLoading(false)
+    })
+
+    // Cleanup function to unsubscribe when component unmounts or technician changes
+    return () => {
+      console.log("Cleaning up real-time listeners")
+      unsubscribe()
+    }
+  }, [technician?.id])
 
   const loadJobs = async (technicianId?: string) => {
     if (!technicianId && !technician?.id) return
@@ -107,7 +147,7 @@ export function TechnicianProvider({ children }: { children: React.ReactNode }) 
         uploadedFiles: completionData.uploadedFiles,
         completedAt: toLocalDateTimeString(new Date()),
       })
-      await loadJobs()
+      // No need to call loadJobs() since real-time listener will handle the update
     } catch (error) {
       console.error("Error completing job:", error)
     }
