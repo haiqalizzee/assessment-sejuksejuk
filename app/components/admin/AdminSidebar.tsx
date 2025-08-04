@@ -2,7 +2,8 @@
 
 import { Button } from "@/components/ui/button"
 import { LayoutDashboard, Plus, FileText, BarChart3, ArrowLeft, Snowflake, X, Users } from "lucide-react"
-import { useRouter, usePathname } from "next/navigation"
+import { usePathname } from "next/navigation"
+import Link from "next/link"
 import { useAuth } from "@/contexts/AuthContext"
 
 interface AdminSidebarProps {
@@ -19,18 +20,18 @@ const sidebarItems = [
 ]
 
 export default function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
-  const router = useRouter()
   const pathname = usePathname()
   const { logout } = useAuth()
 
   const handleLogout = async () => {
     try {
       await logout()
-      router.push("/")
+      window.location.href = "/"
     } catch (error) {
       console.error("Logout error:", error)
     }
   }
+
   return (
     <div
       className={`
@@ -69,19 +70,17 @@ export default function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
       <nav className="p-4">
         <div className="space-y-2">
           {sidebarItems.map((item) => (
-            <button
+            <Link
               key={item.id}
-              onClick={() => {
-                router.push(item.path)
-                onClose() // Close sidebar on mobile after selection
-              }}
+              href={item.path}
+              onClick={onClose} // Close sidebar on mobile after selection
               className={`w-full flex items-center gap-3 px-3 lg:px-4 py-2 lg:py-3 rounded-lg text-left transition-all duration-200 text-sm lg:text-base ${
                 pathname === item.path ? "bg-blue-100 text-blue-900 font-semibold" : "text-blue-700 hover:bg-blue-50"
               }`}
             >
               <item.icon className="w-4 lg:w-5 h-4 lg:h-5 flex-shrink-0" />
               {item.label}
-            </button>
+            </Link>
           ))}
         </div>
       </nav>
