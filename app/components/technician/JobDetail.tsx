@@ -707,7 +707,7 @@ Please check and leave feedback. Thank you!
               {/* Upload Progress */}
               {isUploading && (
                 <div className="space-y-3 p-3 sm:p-4 bg-blue-50 rounded-lg">
-                  <p className="text-center text-blue-600 font-medium text-sm sm:text-base">Uploading files to Firebase Storage...</p>
+                  <p className="text-center text-blue-600 font-medium text-sm sm:text-base">Uploading files...</p>
                   <Progress value={uploadProgress} className="w-full" />
                   <p className="text-center text-xs sm:text-sm text-gray-600">
                     {uploadedFiles.length > 0 ? `${Math.round(uploadProgress)}% complete` : "Preparing upload..."}
