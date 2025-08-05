@@ -1,14 +1,19 @@
 "use client"
 
 import { useRouter } from "next/navigation"
+import { useState } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Eye, Search, ChevronLeft, ChevronRight, Filter, X } from "lucide-react"
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { Eye, Search, ChevronLeft, ChevronRight, Filter, X, Trash2, MoreHorizontal, Edit } from "lucide-react"
 import type { Order, Technician } from "@/app/types"
+import { ordersService } from "@/lib/firebase-services"
+import { useToast } from "@/hooks/use-toast"
 
 interface OrdersListProps {
   orders: Order[]
@@ -27,6 +32,7 @@ interface OrdersListProps {
   totalPages?: number
   totalItems?: number
   onPageChange?: (page: number) => void
+  onOrderDeleted?: () => void
 }
 
 export default function OrdersList({ 
@@ -45,9 +51,15 @@ export default function OrdersList({
   currentPage = 1,
   totalPages = 1,
   totalItems = 0,
-  onPageChange
+  onPageChange,
+  onOrderDeleted
 }: OrdersListProps) {
   const router = useRouter()
+  const { toast } = useToast()
+  const [deletingOrderId, setDeletingOrderId] = useState<string | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [orderToDelete, setOrderToDelete] = useState<Order | null>(null)
 
   const getStatusBadge = (status: Order["status"]) => {
     switch (status) {
@@ -64,6 +76,45 @@ export default function OrdersList({
 
   const handleViewOrder = (order: Order) => {
     router.push(`/admin/orders/${order.id}`)
+  }
+
+  const handleEditOrder = (order: Order) => {
+    router.push(`/admin/orders/${order.id}/edit`)
+  }
+
+  const handleDeleteClick = (order: Order) => {
+    setOrderToDelete(order)
+    setDeleteDialogOpen(true)
+  }
+
+  const handleDeleteOrder = async () => {
+    if (!orderToDelete) return
+    
+    try {
+      setIsDeleting(true)
+      setDeletingOrderId(orderToDelete.id)
+      await ordersService.delete(orderToDelete.id)
+      toast({
+        title: "Order deleted",
+        description: "The order has been successfully deleted.",
+        variant: "default",
+      })
+      if (onOrderDeleted) {
+        onOrderDeleted()
+      }
+    } catch (error) {
+      console.error("Error deleting order:", error)
+      toast({
+        title: "Error",
+        description: "Failed to delete the order. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsDeleting(false)
+      setDeletingOrderId(null)
+      setDeleteDialogOpen(false)
+      setOrderToDelete(null)
+    }
   }
 
   const handlePageChange = (page: number) => {
@@ -219,15 +270,35 @@ export default function OrdersList({
                       </div>
                       <div className="flex items-center justify-between">
                         <span className="text-sm text-gray-600">{order.assignedTechnician}</span>
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          className="bg-transparent text-xs"
-                          onClick={() => handleViewOrder(order)}
-                        >
-                          <Eye className="w-3 h-3 mr-1" />
-                          View
-                        </Button>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="h-8 w-8 p-0"
+                            >
+                              <MoreHorizontal className="w-4 h-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => handleViewOrder(order)}>
+                              <Eye className="w-4 h-4 mr-2" />
+                              View
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleEditOrder(order)}>
+                              <Edit className="w-4 h-4 mr-2" />
+                              Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              onClick={() => handleDeleteClick(order)}
+                              className="text-red-600 focus:text-red-600"
+                              disabled={isDeleting && deletingOrderId === order.id}
+                            >
+                              <Trash2 className="w-4 h-4 mr-2" />
+                              {isDeleting && deletingOrderId === order.id ? "Deleting..." : "Delete"}
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
                     </div>
                   </CardContent>
@@ -246,8 +317,8 @@ export default function OrdersList({
                   <TableHead>Service</TableHead>
                   <TableHead>Assigned Technician</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Amount</TableHead>
-                  <TableHead>Actions</TableHead>
+                  <TableHead className="text-right">Amount</TableHead>
+                  <TableHead className="text-center">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -270,8 +341,8 @@ export default function OrdersList({
                       <TableCell>{order.serviceType}</TableCell>
                       <TableCell>{order.assignedTechnician}</TableCell>
                       <TableCell>{getStatusBadge(order.status)}</TableCell>
-                      <TableCell>
-                        <div className="text-right">
+                      <TableCell className="text-right">
+                        <div>
                           <p className="font-semibold text-green-600">
                             RM {order.status === "completed" && order.finalAmount ? order.finalAmount.toFixed(2) : order.quotedPrice}
                           </p>
@@ -283,15 +354,37 @@ export default function OrdersList({
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          className="bg-transparent"
-                          onClick={() => handleViewOrder(order)}
-                        >
-                          <Eye className="w-4 h-4 mr-1" />
-                          View
-                        </Button>
+                        <div className="flex items-center justify-center">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className="h-8 w-8 p-0"
+                              >
+                                <MoreHorizontal className="w-4 h-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => handleViewOrder(order)}>
+                                <Eye className="w-4 h-4 mr-2" />
+                                View
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleEditOrder(order)}>
+                                <Edit className="w-4 h-4 mr-2" />
+                                Edit
+                              </DropdownMenuItem>
+                              <DropdownMenuItem 
+                                onClick={() => handleDeleteClick(order)}
+                                className="text-red-600 focus:text-red-600"
+                                disabled={isDeleting && deletingOrderId === order.id}
+                              >
+                                <Trash2 className="w-4 h-4 mr-2" />
+                                {isDeleting && deletingOrderId === order.id ? "Deleting..." : "Delete"}
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))
@@ -358,6 +451,28 @@ export default function OrdersList({
           </div>
         )}
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Order</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete order {orderToDelete?.id}? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteOrder}
+              className="bg-red-600 hover:bg-red-700"
+              disabled={isDeleting}
+            >
+              {isDeleting ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

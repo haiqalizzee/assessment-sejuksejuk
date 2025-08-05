@@ -59,6 +59,12 @@ export default function AllOrdersPage() {
     }
   }
 
+  const handleOrderDeleted = () => {
+    // The real-time listener will automatically update the orders
+    // But we can also reload data if needed
+    loadData()
+  }
+
   // Filter orders based on search term and dropdown filters
   const filteredOrders = useMemo(() => {
     let filtered = orders
@@ -139,6 +145,7 @@ export default function AllOrdersPage() {
       totalPages={totalPages}
       totalItems={filteredOrders.length}
       onPageChange={setCurrentPage}
+      onOrderDeleted={handleOrderDeleted}
     />
   )
 } 
